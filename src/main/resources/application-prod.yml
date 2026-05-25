@@ -1,0 +1,19 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+app:
+  auth:
+    expose-tokens-in-response: false
+    refresh-token-delivery: COOKIE
+  swagger:
+    enabled: false
+  security:
+    hsts:
+      enabled: true
+      max-age-seconds: 31536000
+      include-subdomains: true
+      preload: true
+  jwt:
+    admin-refresh-expiration-days: 1

@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: shoplink-postgres
+    environment:
+      POSTGRES_DB: shoplink_db
+      POSTGRES_USER: shoplink_user
+      POSTGRES_PASSWORD: shoplink_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shoplink_user -d shoplink_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: shoplink-mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+  backend:
+    build: .
+    container_name: shoplink-backend
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: shoplink_db
+      DB_USERNAME: shoplink_user
+      DB_PASSWORD: shoplink_password
+      JWT_SECRET: change-this-in-production-to-a-long-random-secret-at-least-32-chars
+      JWT_ACCESS_EXPIRATION_MINUTES: 15
+      JWT_REFRESH_EXPIRATION_DAYS: 7
+      CORS_ALLOWED_ORIGINS: http://localhost:8080,http://localhost:3000,http://localhost:5173,http://localhost:4200
+      SERVER_PORT: 8081
+    ports:
+      - "8081:8081"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health | grep UP"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:

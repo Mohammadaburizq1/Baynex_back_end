@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:shoplink_test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: none
+  flyway:
+    enabled: true
+
+app:
+  jwt:
+    secret: test-secret-key-at-least-32-characters-long!!
+  security:
+    login:
+      mfa-dev-bypass: true

@@ -1,0 +1,6 @@
+.env
+email.env
+target/
+.idea/
+*.iml
+.DS_Store

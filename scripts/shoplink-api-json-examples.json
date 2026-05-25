@@ -1,0 +1,274 @@
+{
+  "_readme": "ShopLink Backend — example JSON shapes. Base path: /api. All successful responses use envelope { success, message, data, errors }.",
+  "envelope_ok": {
+    "success": true,
+    "message": "OK",
+    "data": {},
+    "errors": null
+  },
+  "envelope_created": {
+    "success": true,
+    "message": "Created",
+    "data": {},
+    "errors": null
+  },
+  "envelope_error": {
+    "success": false,
+    "message": "Unexpected server error",
+    "data": null,
+    "errors": null
+  },
+  "envelope_validation": {
+    "success": false,
+    "message": "Validation failed",
+    "data": null,
+    "errors": {
+      "email": "must be a well-formed email address"
+    }
+  },
+  "auth": {
+    "POST_/auth/register_request": {
+      "fullName": "Merchant User",
+      "email": "merchant@example.com",
+      "password": "StrongPass123!",
+      "phone": "+962790000000"
+    },
+    "POST_/auth/register_response_data": {
+      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "refreshToken": "base64url-opaque-token",
+      "user": {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "fullName": "Merchant User",
+        "email": "merchant@example.com",
+        "phone": "+962790000000",
+        "role": "MERCHANT",
+        "active": true,
+        "tokenVersion": 0,
+        "emailVerified": false
+      },
+      "emailVerificationToken": null
+    },
+    "POST_/auth/login_request": {
+      "email": "merchant@example.com",
+      "password": "StrongPass123!"
+    },
+    "POST_/auth/login_response_data": {
+      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "refreshToken": "base64url-opaque-token",
+      "user": {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "fullName": "Merchant User",
+        "email": "merchant@example.com",
+        "phone": "+962790000000",
+        "role": "MERCHANT",
+        "active": true,
+        "tokenVersion": 0,
+        "emailVerified": true
+      },
+      "emailVerificationToken": null
+    },
+    "POST_/auth/refresh_request": {
+      "refreshToken": "base64url-opaque-token"
+    },
+    "POST_/auth/logout_request": {
+      "refreshToken": "base64url-opaque-token"
+    },
+    "GET_/auth/me_headers": {
+      "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    },
+    "GET_/auth/me_response_data": {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "fullName": "Merchant User",
+      "email": "merchant@example.com",
+      "phone": "+962790000000",
+      "role": "MERCHANT_OWNER",
+      "active": true,
+      "tokenVersion": 0,
+      "emailVerified": true
+    },
+    "POST_/auth/forgot-password_request": {
+      "email": "merchant@example.com"
+    },
+    "POST_/auth/forgot-password_response_data": {
+      "message": "If an account exists for this email, password reset instructions have been sent."
+    },
+    "POST_/auth/reset-password_request": {
+      "token": "paste-token-from-email-or-mailpit",
+      "newPassword": "NewStrongPass1!"
+    },
+    "POST_/auth/reset-password_response_data": {
+      "message": "If the request was valid, your password has been updated."
+    },
+    "_forgot_password_notes": "Emails require MAIL_ENABLED=true and SMTP (local Docker uses Mailpit UI at http://localhost:8025). Reset link: {FRONTEND_BASE_URL}/reset-password?token=..."
+  },
+  "public_store": {
+    "GET_/public/stores/{slug}_response_data": {
+      "id": "660e8400-e29b-41d4-a716-446655440001",
+      "ownerId": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "Foodie Demo",
+      "slug": "foodie-demo",
+      "description": "Demo restaurant",
+      "logoUrl": "https://example.com/logo.png",
+      "coverImageUrl": "https://example.com/cover.jpg",
+      "phone": "+962790000001",
+      "whatsappNumber": "+962790000001",
+      "email": "hello@foodie.demo",
+      "address": "Amman",
+      "city": "Amman",
+      "country": "JO",
+      "latitude": 31.9539,
+      "longitude": 35.9106,
+      "primaryColor": "#1a1a2e",
+      "secondaryColor": "#e94560",
+      "categorySlug": "restaurants-cafes",
+      "subCategorySlug": null,
+      "templateKey": "restaurant-default",
+      "status": "ACTIVE",
+      "createdAt": "2026-05-01T10:00:00Z",
+      "updatedAt": "2026-05-01T10:00:00Z"
+    },
+    "GET_/public/stores/{slug}/homepage_response_data": {
+      "store": {},
+      "templateKey": "restaurant-default",
+      "navbarLinks": [{ "label": "Menu", "href": "#menu" }],
+      "hero": { "title": "Welcome" },
+      "popularDishes": [],
+      "categories": [],
+      "featuredProducts": [],
+      "openingHours": {},
+      "contact": {}
+    },
+    "GET_/public/stores/{slug}/products_response_data": [],
+    "GET_/public/stores/{slug}/products/{productSlug}_response_data": {
+      "id": "770e8400-e29b-41d4-a716-446655440002",
+      "storeId": "660e8400-e29b-41d4-a716-446655440001",
+      "categoryId": null,
+      "nameEn": "Margherita Pizza",
+      "nameAr": null,
+      "slug": "margherita-pizza",
+      "description": "Classic pizza",
+      "price": 8.5,
+      "salePrice": null,
+      "currency": "JOD",
+      "imageUrl": "https://example.com/pizza.jpg",
+      "galleryJson": null,
+      "sku": null,
+      "productType": "FOOD_ITEM",
+      "available": true,
+      "featured": true,
+      "sortOrder": 0
+    }
+  },
+  "public_orders": {
+    "POST_/public/stores/{slug}/orders_request": {
+      "customerName": "Ali Ahmad",
+      "customerEmail": "ali@example.com",
+      "customerPhone": "+962791234567",
+      "customerAddress": "Building 5, Street 10",
+      "deliveryMethod": "DELIVERY",
+      "paymentMethod": "CASH",
+      "deliveryFee": 2.0,
+      "discount": 0,
+      "notes": "Ring the bell",
+      "items": [
+        {
+          "productId": "770e8400-e29b-41d4-a716-446655440002",
+          "quantity": 2
+        }
+      ]
+    },
+    "POST_/public/stores/{slug}/orders_response_data": {
+      "id": "880e8400-e29b-41d4-a716-446655440003",
+      "storeId": "660e8400-e29b-41d4-a716-446655440001",
+      "customerName": "Ali Ahmad",
+      "customerEmail": "ali@example.com",
+      "customerPhone": "+962791234567",
+      "customerAddress": "Building 5, Street 10",
+      "deliveryMethod": "DELIVERY",
+      "paymentMethod": "CASH",
+      "status": "NEW",
+      "subtotal": 17.0,
+      "deliveryFee": 2.0,
+      "discount": 0,
+      "total": 19.0,
+      "notes": "Ring the bell",
+      "createdAt": "2026-05-03T12:00:00Z",
+      "items": [
+        {
+          "id": "990e8400-e29b-41d4-a716-446655440004",
+          "productId": "770e8400-e29b-41d4-a716-446655440002",
+          "productNameSnapshot": "Margherita Pizza",
+          "unitPrice": 8.5,
+          "quantity": 2,
+          "total": 17.0
+        }
+      ]
+    },
+    "enums_reference": {
+      "DeliveryMethod": ["DELIVERY", "PICKUP"],
+      "PaymentMethod": ["CASH", "CARD", "WHATSAPP_ONLY"],
+      "OrderStatus": ["NEW", "CONFIRMED", "PREPARING", "READY", "DELIVERED", "CANCELLED"],
+      "Role": ["SUPER_ADMIN", "MERCHANT", "CUSTOMER"],
+      "StoreStatus": ["DRAFT", "ACTIVE", "SUSPENDED"],
+      "ProductType": ["PRODUCT", "SERVICE", "FOOD_ITEM"],
+      "CategoryType": ["BUSINESS", "PRODUCT"]
+    }
+  },
+  "dashboard": {
+    "authorization_header": {
+      "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    },
+    "PUT_/dashboard/stores/{id}_request": {
+      "name": "Foodie Demo",
+      "slug": "foodie-demo",
+      "description": "Updated description",
+      "logoUrl": "https://example.com/logo.png",
+      "coverImageUrl": "https://example.com/cover.jpg",
+      "phone": "+962790000001",
+      "whatsappNumber": "+962790000001",
+      "email": "hello@foodie.demo",
+      "address": "Amman",
+      "city": "Amman",
+      "country": "JO",
+      "latitude": 31.9539,
+      "longitude": 35.9106,
+      "primaryColor": "#1a1a2e",
+      "secondaryColor": "#e94560",
+      "categorySlug": "restaurants-cafes",
+      "subCategorySlug": null,
+      "templateKey": "restaurant-default",
+      "status": "ACTIVE"
+    },
+    "POST_/dashboard/products_request": {
+      "storeId": "660e8400-e29b-41d4-a716-446655440001",
+      "categoryId": null,
+      "nameEn": "New Item",
+      "nameAr": "صنف",
+      "slug": "new-item",
+      "description": "Description",
+      "price": 5.0,
+      "salePrice": null,
+      "currency": "JOD",
+      "imageUrl": "https://example.com/item.jpg",
+      "galleryJson": null,
+      "sku": null,
+      "productType": "FOOD_ITEM",
+      "available": true,
+      "featured": false,
+      "sortOrder": 0
+    },
+    "PUT_/dashboard/orders/{id}/status_request": {
+      "status": "CONFIRMED"
+    },
+    "GET_/dashboard/analytics/daily-store-sales_query": "?from=2026-05-01&to=2026-05-31&storeId=optional-uuid",
+    "GET_/dashboard/analytics/daily-store-sales_response_data": [
+      {
+        "saleDate": "2026-05-03",
+        "storeId": "660e8400-e29b-41d4-a716-446655440001",
+        "storeName": "Foodie Demo",
+        "totalRevenue": 125.5,
+        "orderCount": 8
+      }
+    ]
+  }
+}

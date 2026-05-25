@@ -1,0 +1,24 @@
+# Active by default via spring.profiles.active: local in application.yml
+app:
+  auth:
+    expose-tokens-in-response: true
+    refresh-token-delivery: COOKIE_OR_BODY
+  mail:
+    enabled: true
+    frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:8080}
+  cors:
+    # Flutter web uses a random port unless you pass --web-port.
+    allowed-origin-patterns: "http://localhost:*,http://127.0.0.1:*"
+
+spring:
+  mail:
+    host: ${MAIL_HOST:mailpit}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false

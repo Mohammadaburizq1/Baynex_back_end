@@ -19,8 +19,13 @@ public class MapperService {
     }
 
     public String effectiveTemplateKey(Store s) {
-        if ("restaurants-cafes".equals(s.getCategorySlug()) && (s.getTemplateKey() == null || s.getTemplateKey().isBlank())) {
-            return "restaurant-default";
+        if ("restaurants-cafes".equals(s.getCategorySlug())) {
+            if (s.getSubCategorySlug() != null && !s.getSubCategorySlug().isBlank()) {
+                return s.getSubCategorySlug().trim();
+            }
+            if (s.getTemplateKey() == null || s.getTemplateKey().isBlank()) {
+                return "restaurant-default";
+            }
         }
         return s.getTemplateKey();
     }

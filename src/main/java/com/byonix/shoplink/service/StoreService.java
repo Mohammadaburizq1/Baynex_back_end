@@ -90,8 +90,15 @@ public class StoreService {
         s.setPrimaryColor(blank(r.primaryColor()));
         s.setSecondaryColor(blank(r.secondaryColor()));
         s.setCategorySlug(r.categorySlug());
-        s.setSubCategorySlug(blank(r.subCategorySlug()));
-        s.setTemplateKey(blank(r.templateKey()));
+        final String sub = blank(r.subCategorySlug());
+        final String tk = blank(r.templateKey());
+        s.setSubCategorySlug(sub);
+        // Keep template_key aligned with sub_category_slug when a style is chosen.
+        if (sub != null) {
+            s.setTemplateKey(tk != null ? tk : sub);
+        } else {
+            s.setTemplateKey(tk);
+        }
         // Only change status when the client sends it (partial updates must not reset to DRAFT).
         if (r.status() != null) {
             s.setStatus(r.status());
@@ -99,6 +106,8 @@ public class StoreService {
     }
 
     private String blank(String v) {
-        return v == null || v.isBlank() ? null : v.trim();
+        if (v == null) return null;
+        final t = v.replaceAll("[\\s\\u0000-\\u001F\\u007F]+", "").trim();
+        return t.isEmpty() ? null : t;
     }
 }

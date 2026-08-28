@@ -27,10 +27,29 @@ public class AuthController {
         return ApiResponse.created(authService.register(request, http, response));
     }
 
+    @PostMapping("/register-phone")
+    public ApiResponse<AuthDtos.AuthResponse> registerByPhone(
+            @Valid @RequestBody AuthDtos.RegisterByPhoneRequest request,
+            HttpServletRequest http, HttpServletResponse response) {
+        return ApiResponse.created(authService.registerByPhone(request, http, response));
+    }
+
     @PostMapping("/login")
     public ApiResponse<AuthDtos.AuthResponse> login(@Valid @RequestBody AuthDtos.LoginRequest request,
                                                     HttpServletRequest http, HttpServletResponse response) {
         return ApiResponse.ok(authService.login(request, http, response));
+    }
+
+    @PostMapping("/login-phone")
+    public ApiResponse<AuthDtos.AuthResponse> loginByPhone(@Valid @RequestBody AuthDtos.LoginByPhoneRequest request,
+                                                           HttpServletRequest http, HttpServletResponse response) {
+        return ApiResponse.ok(authService.loginByPhone(request, http, response));
+    }
+
+    @PostMapping("/google")
+    public ApiResponse<AuthDtos.AuthResponse> google(@Valid @RequestBody AuthDtos.GoogleLoginRequest request,
+                                                      HttpServletRequest http, HttpServletResponse response) {
+        return ApiResponse.ok(authService.googleLogin(request, http, response));
     }
 
     @PostMapping("/refresh")
@@ -75,9 +94,41 @@ public class AuthController {
         return ApiResponse.ok(new AuthDtos.MessageResponse("If the request was valid, your password has been updated."));
     }
 
+    @PostMapping("/verify-phone")
+    public ApiResponse<AuthDtos.MessageResponse> verifyPhone(
+            @Valid @RequestBody AuthDtos.VerifyPhoneRequest request, HttpServletRequest http) {
+        authService.verifyPhone(request.phone(), request.code(), http);
+        return ApiResponse.ok(new AuthDtos.MessageResponse("Phone number verified."));
+    }
+
+    @PostMapping("/verify-phone/resend")
+    public ApiResponse<AuthDtos.AuthActionResponse> resendPhoneVerification(
+            @Valid @RequestBody AuthDtos.ResendPhoneVerificationRequest request, HttpServletRequest http) {
+        return ApiResponse.ok(authService.resendPhoneVerification(request.phone(), http));
+    }
+
+    @PostMapping("/forgot-password-phone")
+    public ApiResponse<AuthDtos.AuthActionResponse> forgotPasswordPhone(
+            @Valid @RequestBody AuthDtos.ForgotPasswordPhoneRequest request, HttpServletRequest http) {
+        return ApiResponse.ok(authService.forgotPasswordByPhone(request.phone(), http));
+    }
+
+    @PostMapping("/reset-password-phone")
+    public ApiResponse<AuthDtos.MessageResponse> resetPasswordPhone(
+            @Valid @RequestBody AuthDtos.ResetPasswordPhoneRequest request, HttpServletRequest http) {
+        authService.resetPasswordByPhone(request.phone(), request.code(), request.newPassword(), http);
+        return ApiResponse.ok(new AuthDtos.MessageResponse("Your password has been updated."));
+    }
+
     @GetMapping("/me")
     @SecurityRequirement(name = "bearerAuth")
     public ApiResponse<AuthDtos.UserResponse> me() {
         return ApiResponse.ok(mapper.user(currentUser.user()));
+    }
+
+    @GetMapping("/phone-available")
+    @SecurityRequirements
+    public ApiResponse<AuthDtos.PhoneAvailabilityResponse> phoneAvailable(@RequestParam String phone) {
+        return ApiResponse.ok(new AuthDtos.PhoneAvailabilityResponse(authService.isPhoneAvailable(phone)));
     }
 }

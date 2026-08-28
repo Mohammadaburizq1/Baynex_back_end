@@ -9,6 +9,7 @@ import com.byonix.shoplink.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -75,6 +76,7 @@ public class PublicController {
     }
 
     @PostMapping("/stores/{slug}/orders")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<OrderDtos.OrderResponse> createOrder(@PathVariable String slug, @Valid @RequestBody OrderDtos.CreateOrderRequest request) {
         return ApiResponse.created(orderService.createPublicOrder(slug, request));
     }

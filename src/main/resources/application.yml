@@ -19,6 +19,20 @@ spring:
           time_zone: UTC
   flyway:
     enabled: true
+    # These four statements are templated so the test profile (H2) can swap in equivalents for
+    # syntax H2 doesn't support (extensions, partial/functional indexes) — see
+    # application-test.yml. Every real (Postgres) environment gets the exact original statements
+    # back unchanged via these defaults, so this has no effect outside of tests.
+    placeholders:
+      pgcryptoExtensionStatement: "CREATE EXTENSION IF NOT EXISTS pgcrypto;"
+      emailLowerIndexV1: "CREATE UNIQUE INDEX ux_app_users_email_lower ON app_users (lower(email));"
+      categorySlugIndexes: |
+        CREATE UNIQUE INDEX ux_categories_global_slug ON categories (slug) WHERE store_id IS NULL;
+        CREATE UNIQUE INDEX ux_categories_store_slug ON categories (store_id, slug) WHERE store_id IS NOT NULL;
+      emailLowerIndexV15: |
+        CREATE UNIQUE INDEX ux_app_users_email_lower
+            ON app_users (lower(email))
+            WHERE email IS NOT NULL;
   jackson:
     default-property-inclusion: non_null
   mail:
@@ -60,6 +74,7 @@ app:
     refresh-cookie-same-site: ${REFRESH_COOKIE_SAME_SITE:Strict}
     email-verification-expiration-hours: ${EMAIL_VERIFICATION_EXPIRATION_HOURS:48}
     password-reset-expiration-minutes: ${PASSWORD_RESET_EXPIRATION_MINUTES:15}
+    google-oauth-client-ids: ${GOOGLE_OAUTH_CLIENT_IDS:}
   security:
     hsts:
       enabled: ${HSTS_ENABLED:false}

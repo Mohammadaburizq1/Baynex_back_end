@@ -25,6 +25,13 @@ public class AuthProperties {
 
     private boolean requireSuperAdminMfa = true;
 
+    /**
+     * Comma-separated Google OAuth client IDs (one per platform: web, Android, iOS)
+     * accepted as the "aud" claim when verifying Google Sign-In ID tokens. Empty means
+     * Google login is unconfigured, and GoogleTokenVerifier fails closed for every token.
+     */
+    private String googleOauthClientIds = "";
+
     public enum RefreshTokenDelivery {
         BODY, COOKIE, COOKIE_OR_BODY
     }

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -59,12 +60,14 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/admin/auth/login",
                                 "/api/admin/auth/mfa/verify",
+                                "/api/admin/auth/mfa/setup",
                                 "/api/admin/auth/refresh",
                                 "/api/admin/auth/logout",
                                 "/api/admin/auth/forgot-password",
                                 "/api/admin/auth/reset-password")
                         .permitAll()
                         .requestMatchers("/api/public/auth/me").hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.POST, "/api/public/stores/*/orders").hasRole("CUSTOMER")
                         .requestMatchers("/api/admin/**").hasAnyRole("SUPER_ADMIN", "SUPPORT_ADMIN", "FINANCE_ADMIN", "READ_ONLY_ADMIN")
                         .requestMatchers("/api/auth/**", "/api/public/**", "/swagger-ui.html", "/swagger-ui/**",
                                 "/v3/api-docs/**", "/actuator/health").permitAll()
@@ -106,7 +109,7 @@ public class SecurityConfig {
             config.setAllowedOrigins(allowed);
         }
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of(HttpHeaders.AUTHORIZATION, HttpHeaders.CONTENT_TYPE, "X-Requested-With"));
+        config.setAllowedHeaders(List.of(HttpHeaders.AUTHORIZATION, HttpHeaders.CONTENT_TYPE, "X-Requested-With", "Idempotency-Key"));
         config.setExposedHeaders(List.of(HttpHeaders.AUTHORIZATION));
         config.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

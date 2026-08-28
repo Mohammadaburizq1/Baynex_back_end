@@ -1,6 +1,7 @@
 package com.byonix.shoplink.service.security;
 
 import com.byonix.shoplink.config.LoginSecurityProperties;
+import com.byonix.shoplink.util.PhoneNormalizer;
 import com.byonix.shoplink.domain.entity.User;
 import com.byonix.shoplink.domain.enums.LoginFailureReason;
 import com.byonix.shoplink.domain.enums.Role;
@@ -130,6 +131,92 @@ public class SecureLoginService {
                 portal.isAdmin() ? SecurityEventType.ADMIN_LOGIN_SUCCESS : SecurityEventType.LOGIN_SUCCESS,
                 SecurityEventSeverity.INFO, user, null, ctx.ipAddress(), ctx.userAgent(),
                 Map.of("riskScore", risk));
+        if (newDevice) {
+            securityEventService.log(SecurityEventType.NEW_DEVICE_LOGIN, SecurityEventSeverity.WARN, user, null,
+                    ctx.ipAddress(), ctx.userAgent(), null);
+        }
+
+        return new LoginOutcome(user, risk, extraVerification);
+    }
+
+    @Transactional
+    public LoginOutcome authenticateByPhone(String phone, String password, ClientRequestContext ctx, LoginPortal portal) {
+        rateLimitService.checkLoginByIp(ctx.ipAddress());
+        rateLimitService.checkLoginByEmail(phone);
+        rateLimitService.checkLoginByEmailAndIp(phone, ctx.ipAddress());
+
+        if (ipBlocklistService.isBlocked(ctx.ipAddress())) {
+            fail(phone, null, ctx, LoginFailureReason.IP_BLOCKED, portal, true);
+            throw new GenericAuthException();
+        }
+
+        if (loginAttemptService.tooManyFailuresForIpPerMinute(ctx.ipAddress())
+                || loginAttemptService.tooManyFailuresForIpPerHour(ctx.ipAddress())
+                || loginAttemptService.tooManyFailuresForEmail(phone)) {
+            fail(phone, null, ctx, LoginFailureReason.RATE_LIMITED, portal, false);
+            throw new GenericAuthException();
+        }
+
+        String digits = PhoneNormalizer.digitsOnly(phone);
+        Optional<User> userOpt = userRepository.findByPhoneDigits(digits);
+        User user = userOpt.orElse(null);
+
+        applyProgressiveDelay(user);
+
+        if (user == null) {
+            fail(phone, null, ctx, LoginFailureReason.INVALID_CREDENTIALS, portal, true);
+            throw new GenericAuthException();
+        }
+
+        if (!roleAllowedOnPortal(user.getRole(), portal)) {
+            fail(phone, user, ctx, LoginFailureReason.INVALID_CREDENTIALS, portal, true);
+            throw new GenericAuthException();
+        }
+
+        if (!user.isActive()) {
+            fail(phone, user, ctx, LoginFailureReason.ACCOUNT_DISABLED, portal, false);
+            throw new GenericAuthException();
+        }
+
+        if (accountLockService.isLocked(user)) {
+            fail(phone, user, ctx, LoginFailureReason.ACCOUNT_LOCKED, portal, false);
+            throw new GenericAuthException();
+        }
+
+        if (user.isForcePasswordReset()) {
+            fail(phone, user, ctx, LoginFailureReason.FORCE_PASSWORD_RESET, portal, false);
+            throw new GenericAuthException();
+        }
+
+        boolean wrongPassword = !passwordEncoder.matches(password, user.getPasswordHash());
+        int risk = riskAssessmentService.calculateLoginRisk(user, phone, ctx, wrongPassword, portal.isAdmin(), false);
+
+        if (riskAssessmentService.shouldBlockLogin(risk)) {
+            fail(phone, user, ctx, LoginFailureReason.HIGH_RISK_BLOCKED, portal, wrongPassword);
+            user.setSuspiciousActivityFlag(true);
+            userRepository.save(user);
+            throw new GenericAuthException();
+        }
+
+        if (wrongPassword) {
+            accountLockService.recordFailedLogin(user, ctx.ipAddress(), ctx.userAgent());
+            fail(phone, user, ctx, LoginFailureReason.INVALID_CREDENTIALS, portal, true);
+            throw new GenericAuthException();
+        }
+
+        boolean extraVerification = riskAssessmentService.requiresExtraVerification(risk);
+        if (extraVerification) {
+            user.setSuspiciousActivityFlag(true);
+            userRepository.save(user);
+            securityEventService.log(SecurityEventType.SUSPICIOUS_LOGIN, SecurityEventSeverity.HIGH, user, null,
+                    ctx.ipAddress(), ctx.userAgent(), Map.of("riskScore", risk));
+        }
+
+        boolean newDevice = user.getLastLoginIp() != null && !user.getLastLoginIp().equals(ctx.ipAddress());
+        accountLockService.recordSuccessfulLogin(user, ctx.ipAddress(), ctx.userAgent());
+        loginAttemptService.record(phone, user, ctx, true, null, risk);
+        securityEventService.log(SecurityEventType.LOGIN_SUCCESS, SecurityEventSeverity.INFO, user, null,
+                ctx.ipAddress(), ctx.userAgent(), Map.of("riskScore", risk));
         if (newDevice) {
             securityEventService.log(SecurityEventType.NEW_DEVICE_LOGIN, SecurityEventSeverity.WARN, user, null,
                     ctx.ipAddress(), ctx.userAgent(), null);

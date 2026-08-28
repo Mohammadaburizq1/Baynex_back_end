@@ -5,6 +5,7 @@ import com.byonix.shoplink.api.dto.SecurityDtos;
 import com.byonix.shoplink.common.ApiResponse;
 import com.byonix.shoplink.service.AdminAuthService;
 import com.byonix.shoplink.service.CurrentUserService;
+import com.byonix.shoplink.service.security.MfaChallengeService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdminAuthController {
     private final AdminAuthService adminAuthService;
     private final CurrentUserService currentUser;
+    private final MfaChallengeService mfaChallengeService;
 
     @PostMapping("/login")
     @SecurityRequirements
@@ -33,6 +35,12 @@ public class AdminAuthController {
     public ApiResponse<AuthDtos.AuthResponse> verifyMfa(@Valid @RequestBody SecurityDtos.MfaVerifyRequest request,
                                                       HttpServletRequest http, HttpServletResponse response) {
         return ApiResponse.ok(adminAuthService.verifyMfa(request, http, response));
+    }
+
+    @PostMapping("/mfa/setup")
+    @SecurityRequirements
+    public ApiResponse<SecurityDtos.MfaSetupResponse> setupMfa(@Valid @RequestBody SecurityDtos.MfaSetupRequest request) {
+        return ApiResponse.ok(mfaChallengeService.setupMfa(request.mfaChallengeToken()));
     }
 
     @PostMapping("/refresh")

@@ -37,6 +37,17 @@ public final class SecurityDtos {
     @Schema(description = "Admin MFA step 2 — returns full AuthResponse with access and refresh tokens.")
     public record MfaVerifyRequest(@NotBlank String mfaChallengeToken, @NotBlank String mfaCode) {}
 
+    @Schema(description = """
+            First-time MFA enrollment. Uses the same short-lived mfaChallengeToken returned by /login
+            (proves the password was already correct). Only works while no secret is configured yet —
+            once enrolled, re-running setup is rejected.""")
+    public record MfaSetupRequest(@NotBlank String mfaChallengeToken) {}
+
+    public record MfaSetupResponse(
+            @Schema(description = "Base32 secret — manual-entry fallback if the QR code can't be scanned.") String secret,
+            @Schema(description = "otpauth:// URI encoded in the QR code.") String otpauthUri,
+            @Schema(description = "QR code as a data: URI (image/png;base64) — render directly in an <img> tag.") String qrCodeDataUri) {}
+
     public record ChangePasswordRequest(
             @NotBlank String currentPassword,
             @NotBlank @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{10,}$",

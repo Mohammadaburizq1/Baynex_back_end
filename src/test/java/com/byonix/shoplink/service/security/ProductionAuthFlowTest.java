@@ -62,7 +62,10 @@ class ProductionAuthFlowTest {
                 mock(RefreshTokenCredentialResolver.class),
                 devTokenLogger,
                 mock(EmailNotificationService.class),
-                new MailProperties());
+                new MailProperties(),
+                mock(com.byonix.shoplink.security.google.GoogleTokenVerifier.class),
+                mock(com.byonix.shoplink.service.PasswordHashService.class),
+                mock(OtpService.class));
         ReflectionTestUtils.setField(authService, "emailVerificationHours", 48L);
         ReflectionTestUtils.setField(authService, "passwordResetMinutes", 15L);
     }
@@ -72,6 +75,7 @@ class ProductionAuthFlowTest {
         User user = new User();
         user.setId(java.util.UUID.randomUUID());
         user.setActive(true);
+        user.setRole(Role.MERCHANT_OWNER);
         when(userRepository.findByEmailIgnoreCase(any())).thenReturn(java.util.Optional.of(user));
         when(httpServletRequest.getRemoteAddr()).thenReturn("127.0.0.1");
 

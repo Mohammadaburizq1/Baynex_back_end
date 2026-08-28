@@ -17,7 +17,21 @@ public final class AuthDtos {
                     message = "Password must be at least 10 characters and include uppercase, lowercase, number, and special character") String password,
             @Pattern(regexp = "^$|^\\+?[0-9\\s\\-()]{7,40}$", message = "Invalid phone number") String phone) {}
 
+    /** Merchant onboarding — phone is the primary identifier; email is generated server-side. */
+    public record RegisterByPhoneRequest(
+            @NotBlank @Pattern(regexp = "^\\+?[0-9\\s\\-()]{7,40}$", message = "Invalid phone number") String phone,
+            @Size(max = 160) String fullName,
+            @Size(max = 160) String shopName,
+            @NotBlank @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{10,}$",
+                    message = "Password must be at least 10 characters and include uppercase, lowercase, number, and special character") String password) {}
+
     public record LoginRequest(@NotBlank @Email String email, @NotBlank String password) {}
+
+    public record LoginByPhoneRequest(
+            @NotBlank @Pattern(regexp = "^\\+?[0-9\\s\\-()]{7,40}$", message = "Invalid phone number") String phone,
+            @NotBlank String password) {}
+
+    public record GoogleLoginRequest(@NotBlank String idToken) {}
 
     @Schema(description = """
             Refresh token. Required in JSON body when app.auth.refresh-token-delivery=BODY (mobile/default).
@@ -47,11 +61,29 @@ public final class AuthDtos {
             @NotBlank @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{10,}$",
                     message = "Password must be at least 10 characters and include uppercase, lowercase, number, and special character") String newPassword) {}
 
+    public record VerifyPhoneRequest(
+            @NotBlank @Pattern(regexp = "^\\+?[0-9\\s\\-()]{7,40}$", message = "Invalid phone number") String phone,
+            @NotBlank @Pattern(regexp = "^\\d{6}$", message = "Code must be 6 digits") String code) {}
+
+    public record ResendPhoneVerificationRequest(
+            @NotBlank @Pattern(regexp = "^\\+?[0-9\\s\\-()]{7,40}$", message = "Invalid phone number") String phone) {}
+
+    public record ForgotPasswordPhoneRequest(
+            @NotBlank @Pattern(regexp = "^\\+?[0-9\\s\\-()]{7,40}$", message = "Invalid phone number") String phone) {}
+
+    public record ResetPasswordPhoneRequest(
+            @NotBlank @Pattern(regexp = "^\\+?[0-9\\s\\-()]{7,40}$", message = "Invalid phone number") String phone,
+            @NotBlank @Pattern(regexp = "^\\d{6}$", message = "Code must be 6 digits") String code,
+            @NotBlank @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{10,}$",
+                    message = "Password must be at least 10 characters and include uppercase, lowercase, number, and special character") String newPassword) {}
+
     public record MessageResponse(String message) {}
 
     @Schema(description = "Generic message only — no verification or reset tokens in production.")
     public record AuthActionResponse(String message) {}
 
     public record UserResponse(UUID id, String fullName, String email, String phone, Role role, boolean active, int tokenVersion,
-                               boolean emailVerified) {}
+                               boolean emailVerified, boolean phoneVerified) {}
+
+    public record PhoneAvailabilityResponse(boolean available) {}
 }

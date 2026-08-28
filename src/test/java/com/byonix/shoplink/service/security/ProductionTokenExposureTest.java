@@ -27,7 +27,7 @@ class ProductionTokenExposureTest {
         user.setRole(Role.MERCHANT_OWNER);
         when(authProperties.getRefreshTokenDelivery()).thenReturn(AuthProperties.RefreshTokenDelivery.COOKIE);
         when(mapper.user(user)).thenReturn(new AuthDtos.UserResponse(
-                user.getId(), "n", "e@e.com", null, Role.MERCHANT_OWNER, true, 0, false));
+                user.getId(), "n", "e@e.com", null, Role.MERCHANT_OWNER, true, 0, false, false));
 
         AuthDtos.AuthResponse response = factory.authenticated(user, "access", "refresh-raw", null, false);
         assertNull(response.refreshToken());

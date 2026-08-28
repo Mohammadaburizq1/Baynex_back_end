@@ -65,4 +65,11 @@ public class Store extends BaseAuditable {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private StoreStatus status = StoreStatus.DRAFT;
+
+    @Column(name = "free_delivery_threshold", precision = 12, scale = 3)
+    private BigDecimal freeDeliveryThreshold;
+    @Column(name = "default_estimated_time", length = 60)
+    private String defaultEstimatedTime;
+    @Column(name = "pickup_available", nullable = false)
+    private boolean pickupAvailable = true;
 }

@@ -13,4 +13,5 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     List<Product> findByStore_SlugAndFeaturedTrueAndAvailableTrueOrderBySortOrderAscNameEnAsc(String slug);
     Optional<Product> findByStore_SlugAndSlugAndAvailableTrue(String storeSlug, String productSlug);
     Optional<Product> findByIdAndStore_Id(UUID id, UUID storeId);
+    long countByStore_Id(UUID storeId);
 }

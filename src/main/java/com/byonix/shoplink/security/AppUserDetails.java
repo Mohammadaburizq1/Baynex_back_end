@@ -30,7 +30,13 @@ public record AppUserDetails(User user) implements UserDetails {
 
     @Override
     public String getUsername() {
-        return user.getEmail();
+        if (user.getEmail() != null && !user.getEmail().isBlank()) {
+            return user.getEmail();
+        }
+        if (user.getPhone() != null && !user.getPhone().isBlank()) {
+            return user.getPhone();
+        }
+        return user.getId().toString();
     }
 
     @Override

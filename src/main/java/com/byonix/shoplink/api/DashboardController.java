@@ -23,10 +23,21 @@ public class DashboardController {
     private final StoreService storeService;
     private final CatalogService catalogService;
     private final OrderService orderService;
+    private final DeliveryZoneService deliveryZoneService;
 
     @PostMapping("/stores")
-    public ApiResponse<StoreDtos.StoreResponse> createStore(@Valid @RequestBody StoreDtos.StoreRequest request) {
-        return ApiResponse.created(storeService.create(request));
+    public ApiResponse<StoreDtos.StoreResponse> createStore(
+            @Valid @RequestBody StoreDtos.StoreRequest request,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKeyHeader) {
+        UUID idempotencyKey = null;
+        if (idempotencyKeyHeader != null && !idempotencyKeyHeader.isBlank()) {
+            try {
+                idempotencyKey = UUID.fromString(idempotencyKeyHeader.trim());
+            } catch (IllegalArgumentException ignored) {
+                // Malformed key — treat as if none were sent rather than failing the request.
+            }
+        }
+        return ApiResponse.created(storeService.create(request, idempotencyKey));
     }
 
     @GetMapping("/stores/my")
@@ -105,6 +116,27 @@ public class DashboardController {
     @PutMapping("/orders/{id}/status")
     public ApiResponse<OrderDtos.OrderResponse> updateStatus(@PathVariable UUID id, @Valid @RequestBody OrderDtos.StatusUpdateRequest request) {
         return ApiResponse.ok(orderService.updateStatus(id, request));
+    }
+
+    @GetMapping("/delivery-zones")
+    public ApiResponse<List<DeliveryDtos.DeliveryZoneResponse>> deliveryZones() {
+        return ApiResponse.ok(deliveryZoneService.dashboardZones());
+    }
+
+    @PostMapping("/delivery-zones")
+    public ApiResponse<DeliveryDtos.DeliveryZoneResponse> createDeliveryZone(@Valid @RequestBody DeliveryDtos.DeliveryZoneRequest request) {
+        return ApiResponse.created(deliveryZoneService.create(request));
+    }
+
+    @PutMapping("/delivery-zones/{id}")
+    public ApiResponse<DeliveryDtos.DeliveryZoneResponse> updateDeliveryZone(@PathVariable UUID id, @Valid @RequestBody DeliveryDtos.DeliveryZoneRequest request) {
+        return ApiResponse.ok(deliveryZoneService.update(id, request));
+    }
+
+    @DeleteMapping("/delivery-zones/{id}")
+    public ApiResponse<Void> deleteDeliveryZone(@PathVariable UUID id) {
+        deliveryZoneService.delete(id);
+        return ApiResponse.ok(null);
     }
 
     @GetMapping("/templates")

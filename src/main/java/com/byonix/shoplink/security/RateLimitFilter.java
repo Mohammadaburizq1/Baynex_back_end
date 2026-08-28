@@ -63,14 +63,27 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return null;
         }
         if (path.equals("/api/auth/login")) return new Limit("login", 10, 60);
+        if (path.equals("/api/auth/login-phone")) return new Limit("login-phone", 10, 60);
+        if (path.equals("/api/auth/google")) return new Limit("google-login", 10, 60);
         if (path.equals("/api/admin/auth/login")) return new Limit("admin-login", 5, 60);
         if (path.equals("/api/auth/register")) return new Limit("register", 5, 300);
+        if (path.equals("/api/auth/register-phone")) return new Limit("register-phone", 5, 300);
         if (path.equals("/api/auth/refresh")) return new Limit("refresh", 30, 60);
         if (path.equals("/api/auth/logout")) return new Limit("logout", 40, 60);
         if (path.equals("/api/auth/verify-email")) return new Limit("verify-email", 30, 3600);
         if (path.equals("/api/auth/verify-email/resend")) return new Limit("verify-resend", 10, 3600);
         if (path.equals("/api/auth/forgot-password")) return new Limit("forgot-password", 5, 3600);
         if (path.equals("/api/auth/reset-password")) return new Limit("reset-password", 15, 3600);
+        if (path.equals("/api/auth/verify-phone")) return new Limit("verify-phone", 10, 300);
+        if (path.equals("/api/auth/verify-phone/resend")) return new Limit("verify-phone-resend", 10, 3600);
+        if (path.equals("/api/auth/forgot-password-phone")) return new Limit("forgot-password-phone", 5, 3600);
+        if (path.equals("/api/auth/reset-password-phone")) return new Limit("reset-password-phone", 15, 3600);
+        if (path.equals("/api/public/auth/register")) return new Limit("customer-register", 5, 300);
+        if (path.equals("/api/public/auth/login")) return new Limit("customer-login", 10, 60);
+        if (path.equals("/api/public/auth/refresh")) return new Limit("customer-refresh", 30, 60);
+        if (path.equals("/api/public/auth/logout")) return new Limit("customer-logout", 40, 60);
+        if (path.equals("/api/public/auth/forgot-password")) return new Limit("customer-forgot-password", 5, 3600);
+        if (path.equals("/api/public/auth/reset-password")) return new Limit("customer-reset-password", 15, 3600);
         if (path.matches("^/api/public/stores/[^/]+/orders$")) {
             return new Limit("public-order", 20, 300);
         }

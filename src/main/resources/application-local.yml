@@ -22,3 +22,4 @@ spring:
           auth: false
           starttls:
             enable: false
+            required: false

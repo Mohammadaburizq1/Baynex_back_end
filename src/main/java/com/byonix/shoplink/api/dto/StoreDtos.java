@@ -29,11 +29,15 @@ public final class StoreDtos {
             @NotBlank @Pattern(regexp = "^[a-z0-9]+(?:-[a-z0-9]+)*$") String categorySlug,
             @Pattern(regexp = "^$|^[a-z0-9]+(?:-[a-z0-9]+)*$") String subCategorySlug,
             @Pattern(regexp = "^$|^[a-z0-9]+(?:-[a-z0-9]+)*$") String templateKey,
-            StoreStatus status) {}
+            StoreStatus status,
+            @PositiveOrZero BigDecimal freeDeliveryThreshold,
+            @Size(max = 60) String defaultEstimatedTime,
+            Boolean pickupAvailable) {}
 
     public record StoreResponse(UUID id, UUID ownerId, String name, String slug, String description, String logoUrl,
                                 String coverImageUrl, String phone, String whatsappNumber, String email, String address,
                                 String city, String country, BigDecimal latitude, BigDecimal longitude,
                                 String primaryColor, String secondaryColor, String categorySlug, String subCategorySlug,
-                                String templateKey, StoreStatus status, Instant createdAt, Instant updatedAt) {}
+                                String templateKey, StoreStatus status, Instant createdAt, Instant updatedAt,
+                                BigDecimal freeDeliveryThreshold, String defaultEstimatedTime, boolean pickupAvailable) {}
 }

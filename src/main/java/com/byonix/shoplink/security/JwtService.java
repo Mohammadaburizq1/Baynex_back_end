@@ -38,7 +38,7 @@ public class JwtService {
     public String createAccessToken(User user) {
         Instant now = Instant.now();
         return Jwts.builder()
-                .subject(user.getEmail())
+                .subject(tokenSubject(user))
                 .claim(CLAIM_PURPOSE, PURPOSE_ACCESS)
                 .claim("uid", user.getId().toString())
                 .claim("role", user.getRole().name())
@@ -52,7 +52,7 @@ public class JwtService {
     public String createMfaChallengeToken(User user) {
         Instant now = Instant.now();
         return Jwts.builder()
-                .subject(user.getEmail())
+                .subject(tokenSubject(user))
                 .claim(CLAIM_PURPOSE, PURPOSE_MFA_CHALLENGE)
                 .claim("uid", user.getId().toString())
                 .claim("role", user.getRole().name())
@@ -76,5 +76,15 @@ public class JwtService {
 
     public UUID userId(Claims claims) {
         return UUID.fromString(claims.get("uid", String.class));
+    }
+
+    private static String tokenSubject(User user) {
+        if (user.getEmail() != null && !user.getEmail().isBlank()) {
+            return user.getEmail();
+        }
+        if (user.getPhone() != null && !user.getPhone().isBlank()) {
+            return user.getPhone();
+        }
+        return user.getId().toString();
     }
 }

@@ -125,7 +125,10 @@ public class CatalogService {
     public void deleteProduct(UUID id) {
         Product p = productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product not found"));
         ensureStoreAccess(p.getStore());
+        UUID storeId = p.getStore().getId();
         productRepository.delete(p);
+        productRepository.flush();
+        storeService.revertToDraftIfNoProducts(storeId);
     }
 
     public List<TemplateResponse> templates(String categorySlug) {

@@ -6,6 +6,7 @@ import com.byonix.shoplink.domain.entity.EmailVerificationToken;
 import com.byonix.shoplink.domain.entity.PasswordResetToken;
 import com.byonix.shoplink.domain.entity.RefreshToken;
 import com.byonix.shoplink.domain.entity.User;
+import com.byonix.shoplink.domain.enums.OtpPurpose;
 import com.byonix.shoplink.domain.enums.RefreshSessionScope;
 import com.byonix.shoplink.domain.enums.Role;
 import com.byonix.shoplink.domain.enums.SecurityEventSeverity;
@@ -17,11 +18,14 @@ import com.byonix.shoplink.repository.UserRepository;
 import com.byonix.shoplink.security.JwtService;
 import com.byonix.shoplink.security.RefreshTokenCookieService;
 import com.byonix.shoplink.security.RefreshTokenCredentialResolver;
+import com.byonix.shoplink.security.google.GoogleTokenVerifier;
+import com.byonix.shoplink.security.login.GenericAuthException;
 import com.byonix.shoplink.security.login.SecurityActionException;
 import com.byonix.shoplink.security.ratelimit.RateLimitService;
 import com.byonix.shoplink.security.request.ClientRequestContext;
 import com.byonix.shoplink.service.notification.EmailNotificationService;
 import com.byonix.shoplink.service.security.*;
+import com.byonix.shoplink.util.PhoneNormalizer;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -53,6 +57,9 @@ public class AuthService {
     private final DevTokenLogger devTokenLogger;
     private final EmailNotificationService emailNotificationService;
     private final MailProperties mailProperties;
+    private final GoogleTokenVerifier googleTokenVerifier;
+    private final PasswordHashService passwordHashService;
+    private final OtpService otpService;
 
     @Value("${app.jwt.refresh-expiration-days}")
     private long refreshDays;
@@ -100,6 +107,54 @@ public class AuthService {
         return issue(user, http, response, 0, false, RefreshSessionScope.MERCHANT);
     }
 
+    @Transactional(readOnly = true)
+    public boolean isPhoneAvailable(String phone) {
+        String phoneDigits = PhoneNormalizer.digitsOnly(phone);
+        if (phoneDigits.length() < 7) {
+            return false;
+        }
+        if (userRepository.existsByPhoneDigits(phoneDigits)) {
+            return false;
+        }
+        return true;
+    }
+
+    @Transactional
+    public AuthDtos.AuthResponse registerByPhone(AuthDtos.RegisterByPhoneRequest request,
+                                                 HttpServletRequest http, HttpServletResponse response) {
+        ClientRequestContext ctx = ClientRequestContext.from(http);
+        rateLimitService.checkRegisterByIp(ctx.ipAddress());
+
+        String phoneDigits = PhoneNormalizer.digitsOnly(request.phone());
+        if (phoneDigits.length() < 7) {
+            throw new IllegalArgumentException("Invalid phone number");
+        }
+        if (userRepository.existsByPhoneDigits(phoneDigits)) {
+            throw new IllegalArgumentException("Phone already registered");
+        }
+
+        String apiPhone = PhoneNormalizer.toApiForm(request.phone());
+        String shop = request.shopName() == null ? "" : request.shopName().trim();
+        String name = request.fullName() == null ? "" : request.fullName().trim();
+        if (name.isEmpty()) {
+            name = shop.isEmpty() ? "Store owner" : shop;
+        }
+
+        User user = new User();
+        user.setFullName(name);
+        user.setEmail(null);
+        user.setPhone(apiPhone);
+        user.setRole(Role.MERCHANT_OWNER);
+        user.setPasswordHash(passwordEncoder.encode(request.password()));
+        user.setPasswordChangedAt(Instant.now());
+        user.setEmailVerifiedAt(Instant.now());
+        userRepository.save(user);
+
+        otpService.generateAndSend(user, OtpPurpose.SIGNUP);
+
+        return issue(user, http, response, 0, false, RefreshSessionScope.MERCHANT);
+    }
+
     @Transactional
     public AuthDtos.AuthResponse login(AuthDtos.LoginRequest request, HttpServletRequest http,
                                        HttpServletResponse response) {
@@ -109,6 +164,73 @@ public class AuthService {
                 email, request.password(), ctx, com.byonix.shoplink.security.login.LoginPortal.MERCHANT);
         return issue(outcome.user(), http, response, outcome.riskScore(), outcome.extraVerificationRequired(),
                 RefreshSessionScope.MERCHANT);
+    }
+
+    @Transactional
+    public AuthDtos.AuthResponse loginByPhone(AuthDtos.LoginByPhoneRequest request, HttpServletRequest http,
+                                              HttpServletResponse response) {
+        ClientRequestContext ctx = ClientRequestContext.from(http);
+        SecureLoginService.LoginOutcome outcome = secureLoginService.authenticateByPhone(
+                request.phone(), request.password(), ctx, com.byonix.shoplink.security.login.LoginPortal.MERCHANT);
+        return issue(outcome.user(), http, response, outcome.riskScore(), outcome.extraVerificationRequired(),
+                RefreshSessionScope.MERCHANT);
+    }
+
+    @Transactional
+    public AuthDtos.AuthResponse googleLogin(AuthDtos.GoogleLoginRequest request, HttpServletRequest http,
+                                             HttpServletResponse response) {
+        ClientRequestContext ctx = ClientRequestContext.from(http);
+        rateLimitService.checkGoogleLoginByIp(ctx.ipAddress());
+
+        GoogleTokenVerifier.GoogleIdentity identity = googleTokenVerifier.verify(request.idToken());
+        String email = normalizeEmail(identity.email());
+        rateLimitService.checkGoogleLoginByEmail(email);
+        rateLimitService.checkGoogleLoginByEmailAndIp(email, ctx.ipAddress());
+
+        User user = userRepository.findByGoogleSub(identity.sub())
+                .orElseGet(() -> linkOrCreateFromGoogle(identity, email));
+
+        return issue(user, http, response, 0, false, RefreshSessionScope.MERCHANT);
+    }
+
+    /**
+     * No existing google_sub match (handled by the caller) — fall back to matching by verified
+     * email. Phone-only merchants (email IS NULL, see registerByPhone above) are structurally
+     * excluded from this lookup: findByEmailIgnoreCase can never match a null column. A phone-only
+     * merchant who signs in with Google today therefore gets a brand-new, separate account rather
+     * than being merged into their phone account. That's a known, accepted limitation until an
+     * explicit account-merge feature exists — not a bug to fix here.
+     */
+    private User linkOrCreateFromGoogle(GoogleTokenVerifier.GoogleIdentity identity, String email) {
+        return userRepository.findByEmailIgnoreCase(email)
+                .map(existing -> {
+                    if (!existing.getRole().isMerchant()) {
+                        // Email collides with a customer/admin account on a different portal.
+                        // Same isolation rule password login already enforces — reject, don't link.
+                        throw new GenericAuthException();
+                    }
+                    existing.setGoogleSub(identity.sub());
+                    if (existing.getEmailVerifiedAt() == null) {
+                        existing.setEmailVerifiedAt(Instant.now());
+                    }
+                    userRepository.save(existing);
+                    return existing;
+                })
+                .orElseGet(() -> createFromGoogle(identity, email));
+    }
+
+    private User createFromGoogle(GoogleTokenVerifier.GoogleIdentity identity, String email) {
+        User user = new User();
+        String name = identity.name() != null && !identity.name().isBlank() ? identity.name().trim() : "Store owner";
+        user.setFullName(name);
+        user.setEmail(email);
+        user.setGoogleSub(identity.sub());
+        user.setRole(Role.MERCHANT_OWNER);
+        user.setPasswordHash(passwordHashService.generateUnusablePasswordHash());
+        user.setPasswordChangedAt(Instant.now());
+        user.setEmailVerifiedAt(Instant.now());
+        userRepository.save(user);
+        return user;
     }
 
     @Transactional
@@ -269,6 +391,63 @@ public class AuthService {
         passwordResetTokenRepository.deleteByUserId(user.getId());
         refreshTokenSecurityService.revokeAllSessions(user);
         userRepository.save(user);
+        securityEventService.log(SecurityEventType.PASSWORD_RESET_COMPLETED, SecurityEventSeverity.INFO,
+                user, null, ctx.ipAddress(), ctx.userAgent(), null);
+    }
+
+    @Transactional
+    public void verifyPhone(String phone, String code, HttpServletRequest http) {
+        ClientRequestContext ctx = ClientRequestContext.from(http);
+        rateLimitService.checkVerifyPhoneByIp(ctx.ipAddress());
+        rateLimitService.checkVerifyPhoneByPhone(PhoneNormalizer.digitsOnly(phone));
+        User user = otpService.verify(phone, code, OtpPurpose.SIGNUP);
+        user.setPhoneVerifiedAt(Instant.now());
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public AuthDtos.AuthActionResponse resendPhoneVerification(String phone, HttpServletRequest http) {
+        ClientRequestContext ctx = ClientRequestContext.from(http);
+        rateLimitService.checkPhoneResendByIp(ctx.ipAddress());
+        String digits = PhoneNormalizer.digitsOnly(phone);
+        rateLimitService.checkPhoneResendByPhone(digits);
+        userRepository.findByPhoneDigits(digits)
+                .filter(u -> u.getPhoneVerifiedAt() == null)
+                .filter(User::isActive)
+                .ifPresent(user -> otpService.generateAndSend(user, OtpPurpose.SIGNUP));
+        return authResponseFactory.actionMessage(
+                "If this phone number is registered and not yet verified, we sent a verification code.");
+    }
+
+    @Transactional
+    public AuthDtos.AuthActionResponse forgotPasswordByPhone(String phone, HttpServletRequest http) {
+        ClientRequestContext ctx = ClientRequestContext.from(http);
+        rateLimitService.checkForgotPasswordPhoneByIp(ctx.ipAddress());
+        String digits = PhoneNormalizer.digitsOnly(phone);
+        rateLimitService.checkForgotPasswordPhoneByPhone(digits);
+        userRepository.findByPhoneDigits(digits)
+                .filter(User::isActive)
+                .filter(u -> u.getRole().isMerchant())
+                .ifPresent(user -> {
+                    otpService.generateAndSend(user, OtpPurpose.PASSWORD_RESET);
+                    securityEventService.log(SecurityEventType.PASSWORD_RESET_REQUESTED, SecurityEventSeverity.INFO,
+                            user, null, ctx.ipAddress(), ctx.userAgent(), null);
+                });
+        return authResponseFactory.actionMessage(
+                "If this phone number is registered, we sent a password reset code.");
+    }
+
+    @Transactional
+    public void resetPasswordByPhone(String phone, String code, String newPassword, HttpServletRequest http) {
+        ClientRequestContext ctx = ClientRequestContext.from(http);
+        rateLimitService.checkResetPasswordPhoneByIp(ctx.ipAddress());
+        User user = otpService.verify(phone, code, OtpPurpose.PASSWORD_RESET);
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setPasswordChangedAt(Instant.now());
+        user.setTokenVersion(user.getTokenVersion() + 1);
+        user.setForcePasswordReset(false);
+        userRepository.save(user);
+        refreshTokenSecurityService.revokeAllSessions(user);
         securityEventService.log(SecurityEventType.PASSWORD_RESET_COMPLETED, SecurityEventSeverity.INFO,
                 user, null, ctx.ipAddress(), ctx.userAgent(), null);
     }

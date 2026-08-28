@@ -49,6 +49,8 @@ public class AdminAuthService {
     public AuthDtos.AuthResponse verifyMfa(SecurityDtos.MfaVerifyRequest request, HttpServletRequest http,
                                            HttpServletResponse response) {
         ClientRequestContext ctx = ClientRequestContext.from(http);
+        rateLimitService.checkMfaVerifyByIp(ctx.ipAddress());
+        rateLimitService.checkMfaVerifyByChallenge(request.mfaChallengeToken());
         User user = mfaChallengeService.verifyChallengeAndCode(request.mfaChallengeToken(), request.mfaCode(),
                 ctx.ipAddress(), ctx.userAgent());
         return authService.issue(user, http, response, 0, false, RefreshSessionScope.ADMIN);

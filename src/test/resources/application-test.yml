@@ -8,6 +8,30 @@ spring:
       ddl-auto: none
   flyway:
     enabled: true
+    placeholders:
+      # H2 fallbacks for the four Postgres-only statements templated in the migrations (see
+      # application.yml for the defaults every real Postgres environment uses instead).
+      #
+      # pgcrypto: no H2 equivalent needed at all — H2's MODE=PostgreSQL (see the datasource url
+      # below) already ships gen_random_uuid() as a built-in compatibility function.
+      pgcryptoExtensionStatement: "-- pgcrypto not needed on H2; gen_random_uuid() is a built-in in H2's MODE=PostgreSQL"
+      # email_lower indexes: H2 supports neither expression indexes (lower(email)) nor partial
+      # indexes (WHERE ...), so these fall back to a plain unique index on the raw column. A
+      # UNIQUE index already treats multiple NULLs as non-conflicting under standard SQL
+      # semantics, so the "WHERE email IS NOT NULL" half of the original is a no-op loss either
+      # way — the one real gap is case sensitivity: "User@x.com" and "user@x.com" would collide
+      # on Postgres but not in these tests. Acceptable for what this test suite covers; revisit
+      # if a test ever needs to assert case-insensitive email uniqueness.
+      emailLowerIndexV1: "CREATE UNIQUE INDEX ux_app_users_email_lower ON app_users (email);"
+      # V15 drops and recreates this same index (Postgres needs that to add the functional +
+      # partial pieces) — H2's fallback has neither, so this just puts back the identical plain
+      # index emailLowerIndexV1 already created, keeping the constraint in place after the drop.
+      emailLowerIndexV15: "CREATE UNIQUE INDEX ux_app_users_email_lower ON app_users (email);"
+      # category slug indexes: same partial-index gap. Falls back to a single non-partial unique
+      # index on (store_id, slug). This *underenforces* uniqueness for global (store_id IS NULL)
+      # categories specifically — two global categories could share a slug in H2 tests where
+      # Postgres would reject it. Narrow, documented gap; revisit if a test needs that guarantee.
+      categorySlugIndexes: "CREATE UNIQUE INDEX ux_categories_store_slug ON categories (store_id, slug);"
 
 app:
   jwt:

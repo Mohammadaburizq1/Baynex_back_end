@@ -17,8 +17,11 @@ UPDATE app_users SET mfa_enabled = TRUE WHERE role = 'SUPER_ADMIN';
 
 -- Public order lookup code (short reference for customers)
 ALTER TABLE customer_orders ADD COLUMN IF NOT EXISTS order_code VARCHAR(12);
+-- No WHERE clause needed: a UNIQUE index already treats multiple NULLs as non-conflicting
+-- under standard SQL semantics (both Postgres and H2), and order_code becomes NOT NULL a few
+-- statements below anyway, so this is equivalent to the partial-index form.
 CREATE UNIQUE INDEX IF NOT EXISTS ux_customer_orders_store_order_code
-    ON customer_orders (store_id, order_code) WHERE order_code IS NOT NULL;
+    ON customer_orders (store_id, order_code);
 
 -- Backfill order codes for existing rows
 UPDATE customer_orders

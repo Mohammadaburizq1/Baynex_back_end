@@ -17,10 +17,12 @@
     <description>Secure REST API backend for Byonix / ShopLink</description>
 
     <properties>
-        <java.version>25</java.version>
+        <java.version>17</java.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <jjwt.version>0.12.6</jjwt.version>
         <springdoc.version>3.0.3</springdoc.version>
+        <totp.version>1.7.1</totp.version>
+        <google-api-client.version>2.7.0</google-api-client.version>
     </properties>
 
     <dependencies>
@@ -82,6 +84,16 @@
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>${springdoc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.samstevens.totp</groupId>
+            <artifactId>totp</artifactId>
+            <version>${totp.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.api-client</groupId>
+            <artifactId>google-api-client</artifactId>
+            <version>${google-api-client.version}</version>
         </dependency>
         <dependency>
             <groupId>org.mapstruct</groupId>

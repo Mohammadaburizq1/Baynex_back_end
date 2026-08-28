@@ -37,6 +37,7 @@ public class OrderService {
         Store store = storeService.publicStore(slug);
         CustomerOrder order = new CustomerOrder();
         order.setStore(store);
+        order.setCustomer(currentUser.user());
         order.setOrderCode(orderCodeGenerator.generate());
         order.setCustomerName(r.customerName());
         order.setCustomerEmail(r.customerEmail() == null ? null : r.customerEmail().toLowerCase());

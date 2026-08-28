@@ -15,6 +15,24 @@ import java.util.UUID;
 public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByEmailIgnoreCase(String email);
     boolean existsByEmailIgnoreCase(String email);
+    Optional<User> findByGoogleSub(String googleSub);
+
+    @Query(value = """
+            SELECT EXISTS (
+                SELECT 1 FROM app_users u
+                WHERE regexp_replace(coalesce(u.phone, ''), '[^0-9]', '', 'g') = :digits
+                  AND length(:digits) >= 7
+            )
+            """, nativeQuery = true)
+    boolean existsByPhoneDigits(@Param("digits") String digits);
+
+    @Query(value = """
+            SELECT * FROM app_users u
+            WHERE regexp_replace(coalesce(u.phone, ''), '[^0-9]', '', 'g') = :digits
+              AND length(:digits) >= 7
+            LIMIT 1
+            """, nativeQuery = true)
+    Optional<User> findByPhoneDigits(@Param("digits") String digits);
 
     @Query("""
             select u from User u where u.adminUnlockRequired = true

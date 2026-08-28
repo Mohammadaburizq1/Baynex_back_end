@@ -21,7 +21,7 @@ public class User extends BaseAuditable {
     @Column(name = "full_name", nullable = false, length = 160)
     private String fullName;
 
-    @Column(nullable = false, unique = true, length = 255)
+    @Column(unique = true, length = 255)
     private String email;
 
     @Column(name = "password_hash", nullable = false, length = 100)
@@ -42,6 +42,9 @@ public class User extends BaseAuditable {
 
     @Column(name = "email_verified_at")
     private Instant emailVerifiedAt;
+
+    @Column(name = "phone_verified_at")
+    private Instant phoneVerifiedAt;
 
     @Column(name = "failed_login_count", nullable = false)
     private int failedLoginCount;

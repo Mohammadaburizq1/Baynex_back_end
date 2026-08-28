@@ -4,18 +4,22 @@ import com.byonix.shoplink.api.dto.*;
 import com.byonix.shoplink.domain.entity.*;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Service
 public class MapperService {
     public AuthDtos.UserResponse user(User u) {
         return new AuthDtos.UserResponse(u.getId(), u.getFullName(), u.getEmail(), u.getPhone(), u.getRole(), u.isActive(), u.getTokenVersion(),
-                u.getEmailVerifiedAt() != null);
+                u.getEmailVerifiedAt() != null, u.getPhoneVerifiedAt() != null);
     }
 
     public StoreDtos.StoreResponse store(Store s) {
         return new StoreDtos.StoreResponse(s.getId(), s.getOwner().getId(), s.getName(), s.getSlug(), s.getDescription(),
                 s.getLogoUrl(), s.getCoverImageUrl(), s.getPhone(), s.getWhatsappNumber(), s.getEmail(), s.getAddress(),
                 s.getCity(), s.getCountry(), s.getLatitude(), s.getLongitude(), s.getPrimaryColor(), s.getSecondaryColor(),
-                s.getCategorySlug(), s.getSubCategorySlug(), effectiveTemplateKey(s), s.getStatus(), s.getCreatedAt(), s.getUpdatedAt());
+                s.getCategorySlug(), s.getSubCategorySlug(), effectiveTemplateKey(s), s.getStatus(), s.getCreatedAt(), s.getUpdatedAt(),
+                s.getFreeDeliveryThreshold(), s.getDefaultEstimatedTime(), s.isPickupAvailable());
     }
 
     public String effectiveTemplateKey(Store s) {
@@ -52,6 +56,20 @@ public class MapperService {
     public OrderDtos.OrderItemResponse orderItem(OrderItem i) {
         return new OrderDtos.OrderItemResponse(i.getId(), i.getProduct() == null ? null : i.getProduct().getId(),
                 i.getProductNameSnapshot(), i.getUnitPrice(), i.getQuantity(), i.getTotal());
+    }
+
+    public DeliveryDtos.DeliveryZoneResponse deliveryZone(DeliveryZone z) {
+        return new DeliveryDtos.DeliveryZoneResponse(z.getId(), z.getStore().getId(), z.getName(), splitAreas(z.getAreas()),
+                z.getMinOrder(), z.getDeliveryFee(), z.getEstimatedTime(), z.isActive(), z.getSortOrder());
+    }
+
+    public static String joinAreas(List<String> areas) {
+        return areas == null ? null : String.join(",", areas);
+    }
+
+    private static List<String> splitAreas(String areas) {
+        if (areas == null || areas.isBlank()) return List.of();
+        return Arrays.stream(areas.split(",")).map(String::trim).filter(a -> !a.isEmpty()).toList();
     }
 
     public TemplateResponse template(StoreTemplate t) {

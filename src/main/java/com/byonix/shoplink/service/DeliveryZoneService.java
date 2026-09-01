@@ -6,7 +6,6 @@ import com.byonix.shoplink.domain.entity.Store;
 import com.byonix.shoplink.repository.DeliveryZoneRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +29,7 @@ public class DeliveryZoneService {
 
     @Transactional
     public DeliveryDtos.DeliveryZoneResponse create(DeliveryDtos.DeliveryZoneRequest r) {
-        Store store = storeService.ownedStore(r.storeId());
+        Store store = storeService.accessibleStore(r.storeId());
         DeliveryZone zone = new DeliveryZone();
         zone.setStore(store);
         apply(zone, r);
@@ -51,9 +50,7 @@ public class DeliveryZoneService {
 
     private DeliveryZone ownedZone(UUID id) {
         DeliveryZone zone = deliveryZoneRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Delivery zone not found"));
-        if (!currentUser.isSuperAdmin() && !zone.getStore().getOwner().getId().equals(currentUser.user().getId())) {
-            throw new AccessDeniedException("Access denied");
-        }
+        currentUser.ensureStoreAccess(zone.getStore());
         return zone;
     }
 

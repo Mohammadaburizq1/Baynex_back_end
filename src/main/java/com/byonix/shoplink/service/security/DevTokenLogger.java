@@ -28,4 +28,11 @@ public class DevTokenLogger {
             log.warn("DEV reset token for {}: {}", email, rawToken);
         }
     }
+
+    public void logStaffInviteToken(String email, String rawToken) {
+        if (authProperties.isExposeTokensInResponse()) {
+            log.warn("DEV ONLY staff invite token for {} — check Mailpit http://localhost:8025 or logs below", email);
+            log.warn("DEV staff invite token for {}: {}", email, rawToken);
+        }
+    }
 }

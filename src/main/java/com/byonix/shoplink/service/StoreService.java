@@ -4,6 +4,7 @@ import com.byonix.shoplink.api.dto.StoreDtos;
 import com.byonix.shoplink.domain.entity.Store;
 import com.byonix.shoplink.domain.entity.StoreCreationIdempotencyKey;
 import com.byonix.shoplink.domain.entity.User;
+import com.byonix.shoplink.domain.enums.Role;
 import com.byonix.shoplink.domain.enums.StoreStatus;
 import com.byonix.shoplink.repository.ProductRepository;
 import com.byonix.shoplink.repository.StoreCreationIdempotencyKeyRepository;
@@ -62,7 +63,15 @@ public class StoreService {
     @Transactional(readOnly = true)
     public List<StoreDtos.StoreResponse> myStores() {
         User user = currentUser.user();
-        List<Store> stores = currentUser.isSuperAdmin() ? storeRepository.findAll() : storeRepository.findByOwnerId(user.getId());
+        List<Store> stores;
+        if (currentUser.isSuperAdmin()) {
+            stores = storeRepository.findAll();
+        } else if (user.getRole() == Role.MERCHANT_STAFF) {
+            // A staff account belongs to exactly one store (or none, if unassigned/orphaned).
+            stores = user.getStore() != null ? List.of(user.getStore()) : List.of();
+        } else {
+            stores = storeRepository.findByOwnerId(user.getId());
+        }
         return stores.stream().map(mapper::store).toList();
     }
 
@@ -100,6 +109,15 @@ public class StoreService {
         if (!currentUser.isSuperAdmin() && !store.getOwner().getId().equals(currentUser.user().getId())) {
             throw new AccessDeniedException("Access denied");
         }
+        return store;
+    }
+
+    // Like ownedStore(), but also allows the MERCHANT_STAFF account scoped to this store — for
+    // day-to-day actions (products, categories, delivery zones, analytics) staff are meant to
+    // perform. Store-settings-level mutations must keep using ownedStore() above directly.
+    public Store accessibleStore(UUID id) {
+        Store store = storeRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Store not found"));
+        currentUser.ensureStoreAccess(store);
         return store;
     }
 

@@ -68,6 +68,26 @@ public class EmailNotificationService {
         send(toEmail, subject, text, html);
     }
 
+    public void sendStaffInvite(String toEmail, String storeName, String rawToken) {
+        String link = buildLink(mailProperties.getStaffInvitePath(), rawToken);
+        String subject = "You've been invited to join " + storeName + " on khanGates";
+        String text = """
+                You've been invited to join %s as a team member on khanGates.
+
+                Accept the invite and set your password:
+                %s
+
+                If you weren't expecting this, you can ignore this email.
+                """.formatted(storeName, link);
+        String html = """
+                <p>You've been invited to join <strong>%s</strong> as a team member on khanGates.</p>
+                <p><a href="%s">Accept the invite</a></p>
+                <p>Or copy this link:<br/><code>%s</code></p>
+                <p>If you weren't expecting this, you can ignore this email.</p>
+                """.formatted(storeName, link, link);
+        send(toEmail, subject, text, html);
+    }
+
     private String buildLink(String path, String rawToken) {
         String base = mailProperties.getFrontendBaseUrl().replaceAll("/$", "");
         String normalizedPath = path.startsWith("/") ? path : "/" + path;

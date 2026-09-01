@@ -46,6 +46,10 @@ public class Product extends BaseAuditable {
     private String galleryJson;
     @Column(length = 120)
     private String sku;
+    // Null = not tracked for this product (services never have one; a PRODUCT/FOOD_ITEM the
+    // merchant hasn't set a quantity for yet also reads as "not tracked", not a false zero).
+    @Column
+    private Integer stock;
     @Enumerated(EnumType.STRING)
     @Column(name = "product_type", nullable = false, length = 30)
     private ProductType productType = ProductType.PRODUCT;

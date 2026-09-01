@@ -24,6 +24,7 @@ public class DashboardController {
     private final CatalogService catalogService;
     private final OrderService orderService;
     private final DeliveryZoneService deliveryZoneService;
+    private final OfferService offerService;
 
     @PostMapping("/stores")
     public ApiResponse<StoreDtos.StoreResponse> createStore(
@@ -83,8 +84,8 @@ public class DashboardController {
     }
 
     @GetMapping("/products")
-    public ApiResponse<List<ProductDtos.ProductResponse>> products() {
-        return ApiResponse.ok(catalogService.dashboardProducts());
+    public ApiResponse<List<ProductDtos.ProductResponse>> products(@RequestParam(required = false) UUID storeId) {
+        return ApiResponse.ok(catalogService.dashboardProducts(storeId));
     }
 
     @GetMapping("/products/{id}")
@@ -104,8 +105,8 @@ public class DashboardController {
     }
 
     @GetMapping("/orders")
-    public ApiResponse<List<OrderDtos.OrderResponse>> orders() {
-        return ApiResponse.ok(orderService.dashboardOrders());
+    public ApiResponse<List<OrderDtos.OrderResponse>> orders(@RequestParam(required = false) UUID storeId) {
+        return ApiResponse.ok(orderService.dashboardOrders(storeId));
     }
 
     @GetMapping("/orders/{id}")
@@ -150,5 +151,40 @@ public class DashboardController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(required = false) UUID storeId) {
         return ApiResponse.ok(orderService.dailyStoreSales(from, to, storeId));
+    }
+
+    @GetMapping("/customers")
+    public ApiResponse<List<CustomerDtos.CustomerSummaryResponse>> customers(@RequestParam UUID storeId) {
+        return ApiResponse.ok(orderService.customerSummaries(storeId));
+    }
+
+    @PostMapping("/offers")
+    public ApiResponse<OfferDtos.OfferResponse> createOffer(@Valid @RequestBody OfferDtos.OfferRequest request) {
+        return ApiResponse.created(offerService.createOffer(request));
+    }
+
+    @GetMapping("/offers")
+    public ApiResponse<List<OfferDtos.OfferResponse>> offers(@RequestParam(required = false) UUID storeId) {
+        return ApiResponse.ok(offerService.dashboardOffers(storeId));
+    }
+
+    @PutMapping("/offers/{id}")
+    public ApiResponse<OfferDtos.OfferResponse> updateOffer(@PathVariable UUID id, @Valid @RequestBody OfferDtos.OfferRequest request) {
+        return ApiResponse.ok(offerService.updateOffer(id, request));
+    }
+
+    @DeleteMapping("/offers/{id}")
+    public ApiResponse<Void> deleteOffer(@PathVariable UUID id) {
+        offerService.deleteOffer(id);
+        return ApiResponse.ok(null);
+    }
+
+    @GetMapping("/analytics/top-products")
+    public ApiResponse<List<AnalyticsDtos.TopProductRow>> topProducts(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam UUID storeId,
+            @RequestParam(required = false, defaultValue = "10") int limit) {
+        return ApiResponse.ok(orderService.topProducts(from, to, storeId, limit));
     }
 }

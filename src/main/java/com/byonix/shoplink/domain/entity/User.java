@@ -84,4 +84,15 @@ public class User extends BaseAuditable {
 
     @Column(name = "google_sub", length = 255)
     private String googleSub;
+
+    // Only meaningful for MERCHANT_STAFF — the single store this staff account is scoped to.
+    // Null for owners/admins/customers, and for staff whose store was since deleted.
+    // EAGER (not the usual LAZY default for other @ManyToOne fields in this codebase) because
+    // JwtAuthenticationFilter loads the principal User outside any @Transactional boundary —
+    // a lazy proxy here would throw LazyInitializationException the moment any later,
+    // separately-transactional service method calls getStore() on it. A single nullable to-one
+    // join is cheap enough to always fetch.
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "store_id")
+    private Store store;
 }

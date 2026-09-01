@@ -46,7 +46,7 @@ class OrderServiceLookupTest {
                 .thenReturn(Optional.of(order));
         when(mapper.order(order)).thenReturn(new OrderDtos.OrderResponse(
                 UUID.randomUUID(), store.getId(), "ABC12345", "n", null, "+962790000000", null,
-                null, null, null, null, null, null, null, null, null, java.util.List.of()));
+                null, null, null, null, null, null, null, null, null, null, java.util.List.of()));
 
         orderService.lookupPublicOrder("slug", new OrderDtos.OrderLookupRequest("ABC12345", null, "+962790000000"));
     }

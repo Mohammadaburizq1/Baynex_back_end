@@ -22,7 +22,7 @@ public final class OrderDtos {
             @NotNull DeliveryMethod deliveryMethod,
             @NotNull PaymentMethod paymentMethod,
             @PositiveOrZero BigDecimal deliveryFee,
-            @PositiveOrZero BigDecimal discount,
+            @Size(max = 40) String discountCode,
             @Size(max = 1000) String notes,
             @NotEmpty List<@Valid CreateOrderItemRequest> items) {}
 
@@ -40,6 +40,6 @@ public final class OrderDtos {
     public record OrderResponse(UUID id, UUID storeId, String orderCode, String customerName, String customerEmail,
                                 String customerPhone, String customerAddress, DeliveryMethod deliveryMethod,
                                 PaymentMethod paymentMethod, OrderStatus status, BigDecimal subtotal, BigDecimal deliveryFee,
-                                BigDecimal discount, BigDecimal total, String notes, Instant createdAt,
+                                BigDecimal discount, String discountCode, BigDecimal total, String notes, Instant createdAt,
                                 List<OrderItemResponse> items) {}
 }

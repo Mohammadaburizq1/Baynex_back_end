@@ -1,5 +1,6 @@
 package com.byonix.shoplink.service;
 
+import com.byonix.shoplink.domain.entity.Store;
 import com.byonix.shoplink.domain.entity.User;
 import com.byonix.shoplink.domain.enums.Role;
 import com.byonix.shoplink.security.AppUserDetails;
@@ -44,5 +45,29 @@ public class CurrentUserService {
     /** @deprecated use {@link #requireAdmin()} */
     public void requireSuperAdmin() {
         requireAdmin();
+    }
+
+    /**
+     * True when the current user may act on the given store's day-to-day dashboard data
+     * (products, orders, delivery zones, categories, analytics): they own it, they're the
+     * MERCHANT_STAFF account scoped to it, or they're a super admin. Store-settings-level
+     * mutations (edit/publish/delete the store record itself) intentionally do NOT use this —
+     * see StoreService.ownedStore(), which stays owner-only.
+     */
+    public boolean canAccessStore(Store store) {
+        if (isSuperAdmin()) {
+            return true;
+        }
+        User u = user();
+        if (store.getOwner().getId().equals(u.getId())) {
+            return true;
+        }
+        return u.getRole() == Role.MERCHANT_STAFF && u.getStore() != null && u.getStore().getId().equals(store.getId());
+    }
+
+    public void ensureStoreAccess(Store store) {
+        if (!canAccessStore(store)) {
+            throw new AccessDeniedException("Access denied");
+        }
     }
 }

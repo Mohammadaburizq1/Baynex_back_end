@@ -30,4 +30,6 @@ public class MailProperties {
     private String adminPasswordResetPath = "/admin/reset-password";
 
     private String verifyEmailPath = "/verify-email";
+
+    private String staffInvitePath = "/staff/accept-invite";
 }

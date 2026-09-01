@@ -30,6 +30,10 @@ public class CustomerOrder extends BaseAuditable {
     @JoinColumn(name = "customer_id")
     private User customer;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "offer_id")
+    private Offer offer;
+
     @Column(name = "order_code", nullable = false, length = 12)
     private String orderCode;
 

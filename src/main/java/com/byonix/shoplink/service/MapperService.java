@@ -43,19 +43,37 @@ public class MapperService {
     public ProductDtos.ProductResponse product(Product p) {
         return new ProductDtos.ProductResponse(p.getId(), p.getStore().getId(), p.getCategory() == null ? null : p.getCategory().getId(),
                 p.getNameEn(), p.getNameAr(), p.getSlug(), p.getDescription(), p.getPrice(), p.getSalePrice(), p.getCurrency(),
-                p.getImageUrl(), p.getGalleryJson(), p.getSku(), p.getProductType(), p.isAvailable(), p.isFeatured(), p.getSortOrder());
+                p.getImageUrl(), p.getGalleryJson(), p.getSku(), p.getProductType(), p.isAvailable(), p.isFeatured(), p.getSortOrder(),
+                p.getStock());
+    }
+
+    // Customer-facing storefront responses never include real inventory counts — stock is a
+    // merchant-only concern (dashboard/Inventory page). Same fields as product() otherwise.
+    public ProductDtos.ProductResponse publicProduct(Product p) {
+        ProductDtos.ProductResponse full = product(p);
+        return new ProductDtos.ProductResponse(full.id(), full.storeId(), full.categoryId(), full.nameEn(), full.nameAr(),
+                full.slug(), full.description(), full.price(), full.salePrice(), full.currency(), full.imageUrl(),
+                full.galleryJson(), full.sku(), full.productType(), full.available(), full.featured(), full.sortOrder(),
+                null);
     }
 
     public OrderDtos.OrderResponse order(CustomerOrder o) {
         return new OrderDtos.OrderResponse(o.getId(), o.getStore().getId(), o.getOrderCode(), o.getCustomerName(),
                 o.getCustomerEmail(), o.getCustomerPhone(), o.getCustomerAddress(), o.getDeliveryMethod(),
-                o.getPaymentMethod(), o.getStatus(), o.getSubtotal(), o.getDeliveryFee(), o.getDiscount(), o.getTotal(),
+                o.getPaymentMethod(), o.getStatus(), o.getSubtotal(), o.getDeliveryFee(), o.getDiscount(),
+                o.getOffer() == null ? null : o.getOffer().getCode(), o.getTotal(),
                 o.getNotes(), o.getCreatedAt(), o.getItems().stream().map(this::orderItem).toList());
     }
 
     public OrderDtos.OrderItemResponse orderItem(OrderItem i) {
         return new OrderDtos.OrderItemResponse(i.getId(), i.getProduct() == null ? null : i.getProduct().getId(),
                 i.getProductNameSnapshot(), i.getUnitPrice(), i.getQuantity(), i.getTotal());
+    }
+
+    public OfferDtos.OfferResponse offer(Offer o) {
+        return new OfferDtos.OfferResponse(o.getId(), o.getStore().getId(), o.getCode(), o.getDiscountType(),
+                o.getDiscountValue(), o.getMinOrderAmount(), o.getMaxUses(), o.getTimesUsed(), o.getStartsAt(),
+                o.getExpiresAt(), o.isActive());
     }
 
     public DeliveryDtos.DeliveryZoneResponse deliveryZone(DeliveryZone z) {

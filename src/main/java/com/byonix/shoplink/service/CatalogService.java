@@ -5,6 +5,7 @@ import com.byonix.shoplink.domain.entity.Category;
 import com.byonix.shoplink.domain.entity.Product;
 import com.byonix.shoplink.domain.entity.Store;
 import com.byonix.shoplink.domain.enums.CategoryType;
+import com.byonix.shoplink.domain.enums.ProductType;
 import com.byonix.shoplink.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -38,18 +39,18 @@ public class CatalogService {
 
     public List<ProductDtos.ProductResponse> publicProducts(String storeSlug) {
         storeService.publicStore(storeSlug);
-        return productRepository.findByStore_SlugAndAvailableTrueOrderBySortOrderAscNameEnAsc(storeSlug).stream().map(mapper::product).toList();
+        return productRepository.findByStore_SlugAndAvailableTrueOrderBySortOrderAscNameEnAsc(storeSlug).stream().map(mapper::publicProduct).toList();
     }
 
     public List<ProductDtos.ProductResponse> publicFeaturedProducts(String storeSlug) {
         storeService.publicStore(storeSlug);
         return productRepository.findByStore_SlugAndFeaturedTrueAndAvailableTrueOrderBySortOrderAscNameEnAsc(storeSlug)
-                .stream().map(mapper::product).toList();
+                .stream().map(mapper::publicProduct).toList();
     }
 
     public ProductDtos.ProductResponse publicProduct(String storeSlug, String productSlug) {
         storeService.publicStore(storeSlug);
-        return mapper.product(productRepository.findByStore_SlugAndSlugAndAvailableTrue(storeSlug, productSlug)
+        return mapper.publicProduct(productRepository.findByStore_SlugAndSlugAndAvailableTrue(storeSlug, productSlug)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found")));
     }
 
@@ -98,25 +99,33 @@ public class CatalogService {
         return mapper.product(productRepository.save(p));
     }
 
-    public List<ProductDtos.ProductResponse> dashboardProducts() {
+    // storeId is optional — when present, scopes the result to just that store instead of every
+    // store this merchant owns. Filtering happens against myStores() (or, for a super admin, a
+    // direct lookup) rather than trusting the caller's id blindly, so passing a storeId the
+    // caller doesn't own yields an empty list, never another merchant's products.
+    public List<ProductDtos.ProductResponse> dashboardProducts(UUID storeId) {
         if (currentUser.isSuperAdmin()) {
-            return productRepository.findAll().stream().map(mapper::product).toList();
+            List<Product> products = storeId != null
+                    ? productRepository.findByStore_IdOrderBySortOrderAscNameEnAsc(storeId)
+                    : productRepository.findAll();
+            return products.stream().map(mapper::product).toList();
         }
         return storeService.myStores().stream()
+                .filter(s -> storeId == null || s.id().equals(storeId))
                 .flatMap(s -> productRepository.findByStore_IdOrderBySortOrderAscNameEnAsc(s.id()).stream())
                 .map(mapper::product).toList();
     }
 
     public ProductDtos.ProductResponse dashboardProduct(UUID id) {
         Product p = productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product not found"));
-        ensureStoreAccess(p.getStore());
+        currentUser.ensureStoreAccess(p.getStore());
         return mapper.product(p);
     }
 
     @Transactional
     public ProductDtos.ProductResponse updateProduct(UUID id, ProductDtos.ProductRequest r) {
         Product p = productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product not found"));
-        ensureStoreAccess(p.getStore());
+        currentUser.ensureStoreAccess(p.getStore());
         apply(p, r);
         return mapper.product(p);
     }
@@ -124,7 +133,7 @@ public class CatalogService {
     @Transactional
     public void deleteProduct(UUID id) {
         Product p = productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product not found"));
-        ensureStoreAccess(p.getStore());
+        currentUser.ensureStoreAccess(p.getStore());
         UUID storeId = p.getStore().getId();
         productRepository.delete(p);
         productRepository.flush();
@@ -140,7 +149,7 @@ public class CatalogService {
     }
 
     private void apply(Category c, CategoryDtos.CategoryRequest r) {
-        Store store = r.storeId() == null ? null : storeService.ownedStore(r.storeId());
+        Store store = r.storeId() == null ? null : storeService.accessibleStore(r.storeId());
         if (store == null && !currentUser.isSuperAdmin()) {
             throw new AccessDeniedException("Access denied");
         }
@@ -167,7 +176,7 @@ public class CatalogService {
     }
 
     private void apply(Product p, ProductDtos.ProductRequest r) {
-        Store store = storeService.ownedStore(r.storeId());
+        Store store = storeService.accessibleStore(r.storeId());
         p.setStore(store);
         if (r.categoryId() != null) {
             Category category = categoryRepository.findById(r.categoryId()).orElseThrow(() -> new EntityNotFoundException("Category not found"));
@@ -188,25 +197,24 @@ public class CatalogService {
         p.setImageUrl(blank(r.imageUrl()));
         p.setGalleryJson(r.galleryJson());
         p.setSku(r.sku());
-        p.setProductType(r.productType() == null ? p.getProductType() : r.productType());
+        ProductType type = r.productType() == null ? p.getProductType() : r.productType();
+        p.setProductType(type);
         p.setAvailable(r.available() == null || r.available());
         p.setFeatured(r.featured() != null && r.featured());
         p.setSortOrder(r.sortOrder());
+        // A SERVICE never tracks stock — force it to null regardless of what the client sent,
+        // rather than trusting the client to have omitted it.
+        p.setStock(type == ProductType.SERVICE ? null : r.stock());
     }
 
     private void ensureCategoryAccess(Category c) {
         if (c.getStore() != null) {
-            ensureStoreAccess(c.getStore());
+            currentUser.ensureStoreAccess(c.getStore());
         } else if (!currentUser.isSuperAdmin()) {
             throw new AccessDeniedException("Access denied");
         }
     }
 
-    private void ensureStoreAccess(Store s) {
-        if (!currentUser.isSuperAdmin() && !s.getOwner().getId().equals(currentUser.user().getId())) {
-            throw new AccessDeniedException("Access denied");
-        }
-    }
 
     private String blank(String v) {
         return v == null || v.isBlank() ? null : v.trim();

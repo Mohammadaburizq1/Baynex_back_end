@@ -7,6 +7,7 @@ import com.byonix.shoplink.security.ratelimit.RateLimitService;
 import com.byonix.shoplink.security.request.ClientRequestContext;
 import com.byonix.shoplink.service.*;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,6 +26,8 @@ public class PublicController {
     private final StoreService storeService;
     private final OrderService orderService;
     private final RateLimitService rateLimitService;
+    private final StaffService staffService;
+    private final OfferService offerService;
 
     @GetMapping("/categories/business")
     public ApiResponse<List<CategoryDtos.CategoryResponse>> businessCategories() {
@@ -92,5 +95,17 @@ public class PublicController {
     @GetMapping("/templates/category/{categorySlug}")
     public ApiResponse<List<TemplateResponse>> templates(@PathVariable String categorySlug) {
         return ApiResponse.ok(catalogService.templates(categorySlug));
+    }
+
+    @PostMapping("/stores/{slug}/offers/validate")
+    public ApiResponse<OfferDtos.DiscountValidationResponse> validateOffer(@PathVariable String slug,
+                                                                            @Valid @RequestBody OfferDtos.ValidateOfferRequest request) {
+        return ApiResponse.ok(offerService.validatePublic(slug, request));
+    }
+
+    @PostMapping("/staff/accept-invite")
+    public ApiResponse<AuthDtos.AuthResponse> acceptStaffInvite(@Valid @RequestBody StaffDtos.AcceptInviteRequest request,
+                                                                 HttpServletRequest http, HttpServletResponse response) {
+        return ApiResponse.created(staffService.acceptInvite(request, http, response));
     }
 }

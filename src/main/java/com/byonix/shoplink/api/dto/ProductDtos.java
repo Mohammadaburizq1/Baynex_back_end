@@ -25,10 +25,13 @@ public final class ProductDtos {
             ProductType productType,
             Boolean available,
             Boolean featured,
-            int sortOrder) {}
+            int sortOrder,
+            // Null = don't track stock for this product. Present but rejected client-side for
+            // SERVICE products — see toProductRequest in products.ts.
+            @PositiveOrZero Integer stock) {}
 
     public record ProductResponse(UUID id, UUID storeId, UUID categoryId, String nameEn, String nameAr, String slug,
                                   String description, BigDecimal price, BigDecimal salePrice, String currency,
                                   String imageUrl, String galleryJson, String sku, ProductType productType,
-                                  boolean available, boolean featured, int sortOrder) {}
+                                  boolean available, boolean featured, int sortOrder, Integer stock) {}
 }

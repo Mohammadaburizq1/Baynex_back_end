@@ -8,4 +8,8 @@ public final class AnalyticsDtos {
     private AnalyticsDtos() {}
 
     public record DailyStoreSalesRow(LocalDate saleDate, UUID storeId, String storeName, BigDecimal totalRevenue, long orderCount) {}
+
+    // productId/categoryName are null for a line item whose product was since deleted — see
+    // OrderRepository.queryTopProducts.
+    public record TopProductRow(UUID productId, String name, String categoryName, long unitsSold, BigDecimal revenue) {}
 }

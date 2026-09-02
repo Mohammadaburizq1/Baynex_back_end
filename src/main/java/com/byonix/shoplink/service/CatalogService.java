@@ -5,6 +5,8 @@ import com.byonix.shoplink.domain.entity.Category;
 import com.byonix.shoplink.domain.entity.Product;
 import com.byonix.shoplink.domain.entity.Store;
 import com.byonix.shoplink.domain.enums.CategoryType;
+import com.byonix.shoplink.domain.enums.DashboardSection;
+import com.byonix.shoplink.domain.enums.PermissionLevel;
 import com.byonix.shoplink.domain.enums.ProductType;
 import com.byonix.shoplink.repository.*;
 import jakarta.persistence.EntityNotFoundException;
@@ -71,6 +73,7 @@ public class CatalogService {
         if (currentUser.isSuperAdmin()) {
             return categoryRepository.findAll().stream().map(mapper::category).toList();
         }
+        currentUser.ensureListSectionAccess(DashboardSection.PRODUCTS, PermissionLevel.VIEW);
         return storeService.myStores().stream()
                 .flatMap(s -> categoryRepository.findByStore_IdOrderBySortOrderAscNameEnAsc(s.id()).stream())
                 .map(mapper::category).toList();
@@ -110,6 +113,7 @@ public class CatalogService {
                     : productRepository.findAll();
             return products.stream().map(mapper::product).toList();
         }
+        currentUser.ensureListSectionAccess(DashboardSection.PRODUCTS, PermissionLevel.VIEW);
         return storeService.myStores().stream()
                 .filter(s -> storeId == null || s.id().equals(storeId))
                 .flatMap(s -> productRepository.findByStore_IdOrderBySortOrderAscNameEnAsc(s.id()).stream())
@@ -118,14 +122,14 @@ public class CatalogService {
 
     public ProductDtos.ProductResponse dashboardProduct(UUID id) {
         Product p = productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product not found"));
-        currentUser.ensureStoreAccess(p.getStore());
+        currentUser.ensureSectionAccess(p.getStore(), DashboardSection.PRODUCTS, PermissionLevel.VIEW);
         return mapper.product(p);
     }
 
     @Transactional
     public ProductDtos.ProductResponse updateProduct(UUID id, ProductDtos.ProductRequest r) {
         Product p = productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product not found"));
-        currentUser.ensureStoreAccess(p.getStore());
+        currentUser.ensureSectionAccess(p.getStore(), DashboardSection.PRODUCTS, PermissionLevel.EDIT);
         apply(p, r);
         return mapper.product(p);
     }
@@ -133,7 +137,7 @@ public class CatalogService {
     @Transactional
     public void deleteProduct(UUID id) {
         Product p = productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product not found"));
-        currentUser.ensureStoreAccess(p.getStore());
+        currentUser.ensureSectionAccess(p.getStore(), DashboardSection.PRODUCTS, PermissionLevel.EDIT);
         UUID storeId = p.getStore().getId();
         productRepository.delete(p);
         productRepository.flush();
@@ -152,6 +156,9 @@ public class CatalogService {
         Store store = r.storeId() == null ? null : storeService.accessibleStore(r.storeId());
         if (store == null && !currentUser.isSuperAdmin()) {
             throw new AccessDeniedException("Access denied");
+        }
+        if (store != null) {
+            currentUser.ensureSectionAccess(store, DashboardSection.PRODUCTS, PermissionLevel.EDIT);
         }
         c.setStore(store);
         Category parent = r.parentId() == null ? null : categoryRepository.findById(r.parentId()).orElseThrow(() -> new EntityNotFoundException("Parent category not found"));
@@ -177,6 +184,7 @@ public class CatalogService {
 
     private void apply(Product p, ProductDtos.ProductRequest r) {
         Store store = storeService.accessibleStore(r.storeId());
+        currentUser.ensureSectionAccess(store, DashboardSection.PRODUCTS, PermissionLevel.EDIT);
         p.setStore(store);
         if (r.categoryId() != null) {
             Category category = categoryRepository.findById(r.categoryId()).orElseThrow(() -> new EntityNotFoundException("Category not found"));
@@ -209,12 +217,11 @@ public class CatalogService {
 
     private void ensureCategoryAccess(Category c) {
         if (c.getStore() != null) {
-            currentUser.ensureStoreAccess(c.getStore());
+            currentUser.ensureSectionAccess(c.getStore(), DashboardSection.PRODUCTS, PermissionLevel.EDIT);
         } else if (!currentUser.isSuperAdmin()) {
             throw new AccessDeniedException("Access denied");
         }
     }
-
 
     private String blank(String v) {
         return v == null || v.isBlank() ? null : v.trim();

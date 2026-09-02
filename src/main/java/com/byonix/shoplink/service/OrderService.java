@@ -5,7 +5,9 @@ import com.byonix.shoplink.api.dto.CustomerDtos;
 import com.byonix.shoplink.api.dto.OrderDtos;
 import com.byonix.shoplink.api.dto.StoreDtos;
 import com.byonix.shoplink.domain.entity.*;
+import com.byonix.shoplink.domain.enums.DashboardSection;
 import com.byonix.shoplink.domain.enums.OrderStatus;
+import com.byonix.shoplink.domain.enums.PermissionLevel;
 import com.byonix.shoplink.repository.OfferRepository;
 import com.byonix.shoplink.repository.OrderRepository;
 import com.byonix.shoplink.repository.ProductRepository;
@@ -137,6 +139,7 @@ public class OrderService {
                     : orderRepository.findAll();
             return orders.stream().map(mapper::order).toList();
         }
+        currentUser.ensureListSectionAccess(DashboardSection.ORDERS, PermissionLevel.VIEW);
         return storeService.myStores().stream()
                 .filter(s -> storeId == null || s.id().equals(storeId))
                 .flatMap(s -> orderRepository.findByStore_IdOrderByCreatedAtDesc(s.id()).stream())
@@ -145,14 +148,14 @@ public class OrderService {
 
     public OrderDtos.OrderResponse dashboardOrder(UUID id) {
         CustomerOrder order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order not found"));
-        ensureAccess(order);
+        currentUser.ensureSectionAccess(order.getStore(), DashboardSection.ORDERS, PermissionLevel.VIEW);
         return mapper.order(order);
     }
 
     @Transactional
     public OrderDtos.OrderResponse updateStatus(UUID id, OrderDtos.StatusUpdateRequest request) {
         CustomerOrder order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order not found"));
-        ensureAccess(order);
+        currentUser.ensureSectionAccess(order.getStore(), DashboardSection.ORDERS, PermissionLevel.EDIT);
         OrderStatus previous = order.getStatus();
         order.setStatus(request.status());
         if (request.status() == OrderStatus.CANCELLED && previous != OrderStatus.CANCELLED) {
@@ -166,10 +169,6 @@ public class OrderService {
             }
         }
         return mapper.order(order);
-    }
-
-    private void ensureAccess(CustomerOrder order) {
-        currentUser.ensureStoreAccess(order.getStore());
     }
 
     private BigDecimal nvl(BigDecimal value) {
@@ -191,9 +190,11 @@ public class OrderService {
 
         List<UUID> storeIds = new ArrayList<>();
         if (storeId != null) {
-            storeService.accessibleStore(storeId);
+            Store store = storeService.accessibleStore(storeId);
+            currentUser.ensureSectionAccess(store, DashboardSection.REPORTS, PermissionLevel.VIEW);
             storeIds.add(storeId);
         } else {
+            currentUser.ensureListSectionAccess(DashboardSection.REPORTS, PermissionLevel.VIEW);
             for (StoreDtos.StoreResponse s : storeService.myStores()) {
                 storeIds.add(s.id());
             }
@@ -226,7 +227,8 @@ public class OrderService {
         if (ChronoUnit.DAYS.between(from, to) > MAX_ANALYTICS_RANGE_DAYS) {
             throw new IllegalArgumentException("Date range too large (max " + MAX_ANALYTICS_RANGE_DAYS + " days)");
         }
-        storeService.accessibleStore(storeId);
+        Store topProductsStore = storeService.accessibleStore(storeId);
+        currentUser.ensureSectionAccess(topProductsStore, DashboardSection.REPORTS, PermissionLevel.VIEW);
 
         Instant fromInstant = from.atStartOfDay(ZoneOffset.UTC).toInstant();
         Instant toExclusive = to.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant();
@@ -246,7 +248,8 @@ public class OrderService {
     // other dashboard list (owner or the store's own MERCHANT_STAFF); see
     // OrderRepository.queryCustomerSummaries for how guest vs. registered orders are grouped.
     public List<CustomerDtos.CustomerSummaryResponse> customerSummaries(UUID storeId) {
-        storeService.accessibleStore(storeId);
+        Store store = storeService.accessibleStore(storeId);
+        currentUser.ensureSectionAccess(store, DashboardSection.CUSTOMERS, PermissionLevel.VIEW);
         return orderRepository.queryCustomerSummaries(storeId).stream()
                 .map(p -> new CustomerDtos.CustomerSummaryResponse(
                         p.getCustomerId(),

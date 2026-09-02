@@ -3,6 +3,8 @@ package com.byonix.shoplink.service;
 import com.byonix.shoplink.api.dto.DeliveryDtos;
 import com.byonix.shoplink.domain.entity.DeliveryZone;
 import com.byonix.shoplink.domain.entity.Store;
+import com.byonix.shoplink.domain.enums.DashboardSection;
+import com.byonix.shoplink.domain.enums.PermissionLevel;
 import com.byonix.shoplink.repository.DeliveryZoneRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ public class DeliveryZoneService {
     private final MapperService mapper;
 
     public List<DeliveryDtos.DeliveryZoneResponse> dashboardZones() {
+        currentUser.ensureListSectionAccess(DashboardSection.DELIVERY, PermissionLevel.VIEW);
         return storeService.myStores().stream()
                 .flatMap(s -> deliveryZoneRepository.findByStore_IdOrderBySortOrderAsc(s.id()).stream())
                 .map(mapper::deliveryZone).toList();
@@ -30,6 +33,7 @@ public class DeliveryZoneService {
     @Transactional
     public DeliveryDtos.DeliveryZoneResponse create(DeliveryDtos.DeliveryZoneRequest r) {
         Store store = storeService.accessibleStore(r.storeId());
+        currentUser.ensureSectionAccess(store, DashboardSection.DELIVERY, PermissionLevel.EDIT);
         DeliveryZone zone = new DeliveryZone();
         zone.setStore(store);
         apply(zone, r);
@@ -50,7 +54,7 @@ public class DeliveryZoneService {
 
     private DeliveryZone ownedZone(UUID id) {
         DeliveryZone zone = deliveryZoneRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Delivery zone not found"));
-        currentUser.ensureStoreAccess(zone.getStore());
+        currentUser.ensureSectionAccess(zone.getStore(), DashboardSection.DELIVERY, PermissionLevel.EDIT);
         return zone;
     }
 

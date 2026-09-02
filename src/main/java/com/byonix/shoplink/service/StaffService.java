@@ -1,13 +1,18 @@
 package com.byonix.shoplink.service;
 
 import com.byonix.shoplink.api.dto.AuthDtos;
+import com.byonix.shoplink.api.dto.PermissionDtos;
 import com.byonix.shoplink.api.dto.StaffDtos;
 import com.byonix.shoplink.domain.entity.StaffInvite;
+import com.byonix.shoplink.domain.entity.StaffPermission;
 import com.byonix.shoplink.domain.entity.Store;
 import com.byonix.shoplink.domain.entity.User;
+import com.byonix.shoplink.domain.enums.DashboardSection;
+import com.byonix.shoplink.domain.enums.PermissionLevel;
 import com.byonix.shoplink.domain.enums.RefreshSessionScope;
 import com.byonix.shoplink.domain.enums.Role;
 import com.byonix.shoplink.repository.StaffInviteRepository;
+import com.byonix.shoplink.repository.StaffPermissionRepository;
 import com.byonix.shoplink.repository.UserRepository;
 import com.byonix.shoplink.security.login.SecurityActionException;
 import com.byonix.shoplink.security.request.ClientRequestContext;
@@ -25,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -33,6 +39,7 @@ import java.util.UUID;
 public class StaffService {
     private final UserRepository userRepository;
     private final StaffInviteRepository staffInviteRepository;
+    private final StaffPermissionRepository staffPermissionRepository;
     private final StoreService storeService;
     private final CurrentUserService currentUser;
     private final PasswordEncoder passwordEncoder;
@@ -156,6 +163,55 @@ public class StaffService {
         staffInviteRepository.save(invite);
 
         return authService.issue(user, http, response, 0, false, RefreshSessionScope.MERCHANT);
+    }
+
+    // Owner-only — the full 6-section grid for one of their staff members, defaults filled in
+    // (see CurrentUserService.effectivePermissions).
+    public List<PermissionDtos.PermissionGrant> getStaffPermissions(UUID staffUserId) {
+        loadOwnedStaff(staffUserId);
+        return toGrantList(currentUser.effectivePermissions(staffUserId));
+    }
+
+    // Owner-only — replace-all upsert: every section in the request is set to the given level,
+    // sections not mentioned keep whatever they already were (or stay defaulted to EDIT).
+    @Transactional
+    public List<PermissionDtos.PermissionGrant> updateStaffPermissions(UUID staffUserId, PermissionDtos.PermissionGrantsRequest request) {
+        User staff = loadOwnedStaff(staffUserId);
+        for (PermissionDtos.PermissionGrant grant : request.grants()) {
+            StaffPermission permission = staffPermissionRepository.findByUser_IdAndSection(staffUserId, grant.section())
+                    .orElseGet(() -> {
+                        StaffPermission created = new StaffPermission();
+                        created.setUser(staff);
+                        created.setSection(grant.section());
+                        return created;
+                    });
+            permission.setLevel(grant.level());
+            staffPermissionRepository.save(permission);
+        }
+        return getStaffPermissions(staffUserId);
+    }
+
+    // Self-service — any authenticated merchant fetching their OWN effective grid (see
+    // StaffController's method-level @PreAuthorize override). An owner has no permission rows of
+    // their own, so this naturally returns all-EDIT for them via the same default-fill logic.
+    public List<PermissionDtos.PermissionGrant> myPermissions() {
+        return toGrantList(currentUser.effectivePermissions(currentUser.user().getId()));
+    }
+
+    private List<PermissionDtos.PermissionGrant> toGrantList(Map<DashboardSection, PermissionLevel> effective) {
+        return effective.entrySet().stream()
+                .map(e -> new PermissionDtos.PermissionGrant(e.getKey(), e.getValue()))
+                .toList();
+    }
+
+    private User loadOwnedStaff(UUID staffUserId) {
+        User staff = userRepository.findById(staffUserId)
+                .orElseThrow(() -> new EntityNotFoundException("Staff member not found"));
+        if (staff.getRole() != Role.MERCHANT_STAFF || staff.getStore() == null) {
+            throw new IllegalArgumentException("Not a staff member");
+        }
+        storeService.ownedStore(staff.getStore().getId());
+        return staff;
     }
 
     private String blankToNull(String value) {

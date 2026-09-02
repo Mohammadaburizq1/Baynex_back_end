@@ -3,7 +3,9 @@ package com.byonix.shoplink.service;
 import com.byonix.shoplink.api.dto.OfferDtos;
 import com.byonix.shoplink.domain.entity.Offer;
 import com.byonix.shoplink.domain.entity.Store;
+import com.byonix.shoplink.domain.enums.DashboardSection;
 import com.byonix.shoplink.domain.enums.DiscountType;
+import com.byonix.shoplink.domain.enums.PermissionLevel;
 import com.byonix.shoplink.repository.OfferRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +43,7 @@ public class OfferService {
                     : offerRepository.findAll();
             return offers.stream().map(mapper::offer).toList();
         }
+        currentUser.ensureListSectionAccess(DashboardSection.OFFERS, PermissionLevel.VIEW);
         return storeService.myStores().stream()
                 .filter(s -> storeId == null || s.id().equals(storeId))
                 .flatMap(s -> offerRepository.findByStore_IdOrderByCreatedAtDesc(s.id()).stream())
@@ -50,7 +53,7 @@ public class OfferService {
     @Transactional
     public OfferDtos.OfferResponse updateOffer(UUID id, OfferDtos.OfferRequest r) {
         Offer o = offerRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Offer not found"));
-        currentUser.ensureStoreAccess(o.getStore());
+        currentUser.ensureSectionAccess(o.getStore(), DashboardSection.OFFERS, PermissionLevel.EDIT);
         apply(o, r, id);
         return mapper.offer(o);
     }
@@ -58,7 +61,7 @@ public class OfferService {
     @Transactional
     public void deleteOffer(UUID id) {
         Offer o = offerRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Offer not found"));
-        currentUser.ensureStoreAccess(o.getStore());
+        currentUser.ensureSectionAccess(o.getStore(), DashboardSection.OFFERS, PermissionLevel.EDIT);
         offerRepository.delete(o);
     }
 
@@ -112,6 +115,7 @@ public class OfferService {
 
     private void apply(Offer o, OfferDtos.OfferRequest r, UUID selfId) {
         Store store = storeService.accessibleStore(r.storeId());
+        currentUser.ensureSectionAccess(store, DashboardSection.OFFERS, PermissionLevel.EDIT);
         String code = r.code().trim().toUpperCase();
         boolean duplicate = selfId == null
                 ? offerRepository.existsByStore_IdAndCodeIgnoreCase(store.getId(), code)

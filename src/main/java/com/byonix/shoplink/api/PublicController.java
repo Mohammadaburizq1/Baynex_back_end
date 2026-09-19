@@ -28,6 +28,7 @@ public class PublicController {
     private final RateLimitService rateLimitService;
     private final StaffService staffService;
     private final OfferService offerService;
+    private final AppointmentService appointmentService;
 
     @GetMapping("/categories/business")
     public ApiResponse<List<CategoryDtos.CategoryResponse>> businessCategories() {
@@ -101,6 +102,18 @@ public class PublicController {
     public ApiResponse<OfferDtos.DiscountValidationResponse> validateOffer(@PathVariable String slug,
                                                                             @Valid @RequestBody OfferDtos.ValidateOfferRequest request) {
         return ApiResponse.ok(offerService.validatePublic(slug, request));
+    }
+
+    @GetMapping("/stores/{slug}/appointment-slots")
+    public ApiResponse<List<AppointmentDtos.SlotResponse>> upcomingSlots(@PathVariable String slug) {
+        return ApiResponse.ok(appointmentService.publicUpcomingSlots(slug));
+    }
+
+    @PostMapping("/stores/{slug}/appointments")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ApiResponse<AppointmentDtos.AppointmentResponse> bookAppointment(
+            @PathVariable String slug, @Valid @RequestBody AppointmentDtos.CreateAppointmentRequest request) {
+        return ApiResponse.created(appointmentService.createPublicAppointment(slug, request));
     }
 
     @PostMapping("/staff/accept-invite")

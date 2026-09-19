@@ -25,6 +25,7 @@ public class DashboardController {
     private final OrderService orderService;
     private final DeliveryZoneService deliveryZoneService;
     private final OfferService offerService;
+    private final AppointmentService appointmentService;
 
     @PostMapping("/stores")
     public ApiResponse<StoreDtos.StoreResponse> createStore(
@@ -177,6 +178,33 @@ public class DashboardController {
     public ApiResponse<Void> deleteOffer(@PathVariable UUID id) {
         offerService.deleteOffer(id);
         return ApiResponse.ok(null);
+    }
+
+    @PostMapping("/appointment-slots")
+    public ApiResponse<AppointmentDtos.SlotResponse> createSlot(@Valid @RequestBody AppointmentDtos.SlotRequest request) {
+        return ApiResponse.created(appointmentService.createSlot(request));
+    }
+
+    @GetMapping("/appointment-slots")
+    public ApiResponse<List<AppointmentDtos.SlotResponse>> appointmentSlots(@RequestParam(required = false) UUID storeId) {
+        return ApiResponse.ok(appointmentService.dashboardSlots(storeId));
+    }
+
+    @DeleteMapping("/appointment-slots/{id}")
+    public ApiResponse<Void> deleteSlot(@PathVariable UUID id) {
+        appointmentService.deleteSlot(id);
+        return ApiResponse.ok(null);
+    }
+
+    @GetMapping("/appointments")
+    public ApiResponse<List<AppointmentDtos.AppointmentResponse>> appointments(@RequestParam(required = false) UUID storeId) {
+        return ApiResponse.ok(appointmentService.dashboardAppointments(storeId));
+    }
+
+    @PutMapping("/appointments/{id}/status")
+    public ApiResponse<AppointmentDtos.AppointmentResponse> updateAppointmentStatus(
+            @PathVariable UUID id, @Valid @RequestBody AppointmentDtos.StatusUpdateRequest request) {
+        return ApiResponse.ok(appointmentService.updateStatus(id, request));
     }
 
     @GetMapping("/analytics/top-products")

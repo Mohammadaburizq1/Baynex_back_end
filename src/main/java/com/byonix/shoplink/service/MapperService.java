@@ -76,6 +76,20 @@ public class MapperService {
                 o.getExpiresAt(), o.isActive());
     }
 
+    public AppointmentDtos.SlotResponse appointmentSlot(AppointmentSlot s) {
+        return new AppointmentDtos.SlotResponse(s.getId(), s.getStore().getId(), s.getStartsAt(), s.getEndsAt(),
+                s.getCapacity(), s.getBookedCount(), s.isActive());
+    }
+
+    public AppointmentDtos.AppointmentResponse appointment(Appointment a) {
+        return new AppointmentDtos.AppointmentResponse(a.getId(), a.getStore().getId(), a.getSlot().getId(),
+                a.getSlot().getStartsAt(), a.getSlot().getEndsAt(),
+                a.getProduct() == null ? null : a.getProduct().getId(),
+                a.getProduct() == null ? null : a.getProduct().getNameEn(),
+                a.getCustomerName(), a.getCustomerEmail(), a.getCustomerPhone(), a.getNotes(),
+                a.getStatus(), a.getCreatedAt());
+    }
+
     public DeliveryDtos.DeliveryZoneResponse deliveryZone(DeliveryZone z) {
         return new DeliveryDtos.DeliveryZoneResponse(z.getId(), z.getStore().getId(), z.getName(), splitAreas(z.getAreas()),
                 z.getMinOrder(), z.getDeliveryFee(), z.getEstimatedTime(), z.isActive(), z.getSortOrder());

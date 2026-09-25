@@ -6,9 +6,9 @@ package com.byonix.shoplink.security.login;
 public class SecurityActionException extends RuntimeException {
     public static final String GENERIC_TOKEN_MESSAGE = "Invalid or expired link";
     public static final String GENERIC_RESET_MESSAGE =
-            "If an account exists for this email, password reset instructions have been sent.";
+            "Request received. If eligible, check your inbox for password reset instructions.";
     public static final String GENERIC_VERIFY_RESEND_MESSAGE =
-            "If this email is registered and not yet verified, we sent a verification link.";
+            "Request received. If eligible, check your inbox for a verification link.";
 
     public SecurityActionException(String message) {
         super(message);

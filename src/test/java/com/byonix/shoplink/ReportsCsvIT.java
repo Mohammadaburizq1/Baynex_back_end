@@ -34,11 +34,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Uses the same entity-generated H2 schema as CustomerOrderHistoryTest (V33 can't run on H2);
  * it does not validate the production Flyway migrations.
  */
-@SpringBootTest(properties = {
-        "spring.flyway.enabled=false", "spring.jpa.hibernate.ddl-auto=create-drop",
-        "spring.datasource.url=jdbc:h2:mem:customer_history;MODE=PostgreSQL;DB_CLOSE_DELAY=-1"
-})
-@Sql("/customer-history-schema.sql")
+
+
 class ReportsCsvIT extends ApiIT {
     private static final String HEADER = "order_code,created_at_utc,status,fulfillment_method,customer_name,"
             + "subtotal,discount,delivery_fee,total,currency";

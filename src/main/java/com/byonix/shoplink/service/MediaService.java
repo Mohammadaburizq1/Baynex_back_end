@@ -42,6 +42,7 @@ public class MediaService {
         }
         try {
             byte[] bytes = file.getBytes();
+            if (bytes.length > MAX_BYTES) throw new IllegalArgumentException("Images can be up to 5 MB");
             ImageType type = ImageType.detect(bytes)
                     .orElseThrow(() -> new IllegalArgumentException("Upload a JPEG, PNG, WebP or GIF image"));
             String name = storage.save(store.getId(), type, bytes);

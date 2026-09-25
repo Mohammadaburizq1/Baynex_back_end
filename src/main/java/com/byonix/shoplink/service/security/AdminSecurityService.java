@@ -68,7 +68,7 @@ public class AdminSecurityService {
                 request.ipAddress(),
                 request.reason(),
                 request.blockedUntil(),
-                request.permanent(),
+                Boolean.TRUE.equals(request.permanent()),
                 admin);
         adminAuditService.log(admin, AdminAuditAction.BLOCK_IP, null, request.ipAddress(),
                 Map.of("reason", request.reason()));

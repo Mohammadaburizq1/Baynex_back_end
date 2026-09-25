@@ -31,7 +31,7 @@ public class RefreshTokenCredentialResolver {
         if (cookieToken.isPresent()) {
             return cookieToken.get();
         }
-        if (hasBody) {
+        if (hasBody && authProperties.getRefreshTokenDelivery() == AuthProperties.RefreshTokenDelivery.COOKIE_OR_BODY) {
             return bodyToken.trim();
         }
         throw new GenericAuthException();

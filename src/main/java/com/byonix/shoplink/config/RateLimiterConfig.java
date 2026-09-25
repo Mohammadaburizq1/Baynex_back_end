@@ -10,7 +10,8 @@ import org.springframework.context.annotation.Configuration;
 public class RateLimiterConfig {
     @Bean
     @ConditionalOnMissingBean(RateLimiter.class)
-    RateLimiter inMemoryRateLimiter() {
+    RateLimiter inMemoryRateLimiter(@org.springframework.beans.factory.annotation.Value("${app.security.rate-limit.backend:memory}") String backend) {
+        if (!"memory".equals(backend)) throw new IllegalStateException("Unsupported rate-limit backend; only memory is implemented (single instance required)");
         return new InMemoryRateLimiter();
     }
 }

@@ -20,10 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /** Real JWT, HTTP validation, controller and persistence. V33 is not H2-compatible;
  * use the same isolated entity schema as M1-07 without changing production migrations. */
-@SpringBootTest(properties = {
-        "spring.flyway.enabled=false", "spring.jpa.hibernate.ddl-auto=create-drop",
-        "spring.datasource.url=jdbc:h2:mem:customer_history;MODE=PostgreSQL;DB_CLOSE_DELAY=-1"
-})
+
 class CustomerProfileTest extends ApiIT {
     private static final String PROFILE = "/api/public/customers/me";
     private User a, b;

@@ -16,11 +16,11 @@ import java.util.Map;
 @Service
 public class SecurityAlertService {
     public void sendSecurityAlert(SecurityEventType type, User user, String email, int riskScore, Map<String, Object> context) {
-        log.warn("SECURITY_ALERT type={} user={} email={} riskScore={} context={}",
-                type, user != null ? user.getId() : null, email, riskScore, context);
+        log.warn("SECURITY_ALERT type={} user={} riskScore={}",
+                type, user != null ? user.getId() : null, riskScore);
     }
 
     public void sendAdminLoginFailureAlert(String email, String ip) {
-        log.warn("ADMIN_LOGIN_FAILED email={} ip={}", email, ip);
+        log.warn("ADMIN_LOGIN_FAILED");
     }
 }

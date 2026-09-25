@@ -233,13 +233,13 @@ public class AuthService {
         return user;
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = com.byonix.shoplink.security.login.GenericAuthException.class)
     public AuthDtos.AuthResponse refresh(AuthDtos.RefreshRequest request, HttpServletRequest http,
                                          HttpServletResponse response) {
         return refresh(request, http, response, RefreshSessionScope.MERCHANT);
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = com.byonix.shoplink.security.login.GenericAuthException.class)
     public AuthDtos.AuthResponse refresh(AuthDtos.RefreshRequest request, HttpServletRequest http,
                                          HttpServletResponse response, RefreshSessionScope scope) {
         ClientRequestContext ctx = ClientRequestContext.from(http);
@@ -272,7 +272,7 @@ public class AuthService {
             String raw = refreshTokenCredentialResolver.resolve(
                     request != null ? request.refreshToken() : null, http, scope);
             refreshTokenRepository.findByTokenHash(tokenHashService.hash(raw)).ifPresent(token -> {
-                if (token.getRevokedAt() == null) {
+                if (token.getSessionScope() == scope && token.getRevokedAt() == null) {
                     token.setRevokedAt(Instant.now());
                 }
             });

@@ -47,6 +47,9 @@ spring:
     properties:
       mail:
         smtp:
+          connectiontimeout: 3000
+          timeout: 3000
+          writetimeout: 3000
           auth: ${MAIL_SMTP_AUTH:true}
           starttls:
             enable: ${MAIL_SMTP_STARTTLS:true}
@@ -130,6 +133,9 @@ springdoc:
     path: /swagger-ui.html
 
 management:
+  health:
+    mail:
+      enabled: ${app.mail.enabled:false}
   endpoints:
     web:
       exposure:

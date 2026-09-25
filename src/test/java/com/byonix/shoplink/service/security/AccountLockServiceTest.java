@@ -31,11 +31,7 @@ class AccountLockServiceTest {
         org.mockito.Mockito.when(props.getMerchantLockThreshold1()).thenReturn(5);
         org.mockito.Mockito.when(props.getMerchantLockThreshold2()).thenReturn(10);
         org.mockito.Mockito.when(props.getMerchantLockThreshold3()).thenReturn(20);
-        org.mockito.Mockito.when(props.getAdminLockThreshold1()).thenReturn(3);
-        org.mockito.Mockito.when(props.getAdminLockThreshold2()).thenReturn(5);
-        org.mockito.Mockito.when(props.getAdminLockThreshold3()).thenReturn(10);
         org.mockito.Mockito.when(props.getLockMinutes1()).thenReturn(15);
-        org.mockito.Mockito.when(props.getLockMinutes2()).thenReturn(60);
 
         accountLockService.recordFailedLogin(user, "1.2.3.4", "agent");
         assertTrue(user.getFailedLoginCount() >= 5);

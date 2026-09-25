@@ -81,7 +81,7 @@ class ProductionAuthFlowTest {
 
         var response = authService.forgotPassword("merchant@example.com", httpServletRequest);
         org.junit.jupiter.api.Assertions.assertEquals(
-                "If an account exists for this email, password reset instructions have been sent.",
+                "Request received. If eligible, check your inbox for password reset instructions.",
                 response.message());
     }
 }

@@ -108,7 +108,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     ResponseEntity<ApiResponse<Void>> generic(Exception ex) {
-        log.error("Unhandled exception", ex);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error("Unexpected server error"));
+        String errorId = java.util.UUID.randomUUID().toString();
+        log.error("Unhandled error id={} type={} location={}", errorId, ex.getClass().getName(),
+                ex.getStackTrace().length == 0 ? "unknown" : ex.getStackTrace()[0]);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).header("X-Error-Id", errorId)
+                .body(ApiResponse.error("Unexpected server error"));
     }
 }

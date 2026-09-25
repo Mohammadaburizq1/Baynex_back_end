@@ -37,6 +37,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
@@ -74,6 +75,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @WebAppConfiguration
 @ActiveProfiles("test")
+@org.springframework.test.context.ContextConfiguration(initializers = com.byonix.shoplink.support.PostgresTestDatabase.class)
 @Transactional
 class MultiTenantIsolationIT {
     private static final AtomicInteger IP_COUNTER = new AtomicInteger();
@@ -89,6 +91,7 @@ class MultiTenantIsolationIT {
     private String remoteAddr;
 
     private User staffA;
+    private User ownerB;
     private String ownerAToken;
     private String ownerBToken;
     private String staffAToken;
@@ -120,7 +123,7 @@ class MultiTenantIsolationIT {
         remoteAddr = "10.77." + (n / 250) + "." + (n % 250 + 1);
 
         User ownerA = saveUser(Role.MERCHANT_OWNER, "owner-a");
-        User ownerB = saveUser(Role.MERCHANT_OWNER, "owner-b");
+        ownerB = saveUser(Role.MERCHANT_OWNER, "owner-b");
         User customer = saveUser(Role.CUSTOMER, "customer");
         ownerAToken = jwtService.createAccessToken(ownerA);
         ownerBToken = jwtService.createAccessToken(ownerB);
@@ -368,6 +371,21 @@ class MultiTenantIsolationIT {
     }
 
     @Test
+    void staffEndpointsAnswerAnotherMerchantsUserIdExactlyLikeAnUnknownId() throws Exception {
+        // M2-14 regression: a non-staff user id used to answer 400 "Not a staff member" while an
+        // unknown id answered 404, which let an owner probe which ids belong to real accounts.
+        for (String target : new String[]{ownerB.getId().toString(), UUID.randomUUID().toString()}) {
+            send(GET, "/api/dashboard/staff/" + target + "/permissions", ownerAToken, null).andExpect(status().isNotFound());
+            send(PUT, "/api/dashboard/staff/" + target + "/permissions", ownerAToken,
+                    "{\"grants\":[{\"section\":\"PRODUCTS\",\"level\":\"NONE\"}]}").andExpect(status().isNotFound());
+            send(PUT, "/api/dashboard/staff/" + target + "/deactivate", ownerAToken, null).andExpect(status().isNotFound());
+        }
+        assertThat(userRepository.findById(ownerB.getId()).orElseThrow().isActive()).isTrue();
+        // Positive control: A's own staff member is still reachable.
+        send(GET, "/api/dashboard/staff/" + staffA.getId() + "/permissions", ownerAToken, null).andExpect(status().isOk());
+    }
+
+    @Test
     void staffAreConfinedToTheirOwnStoreAndCannotDoOwnerOnlyActions() throws Exception {
         // Inside their own store they work normally (grid defaults to EDIT).
         send(POST, "/api/dashboard/products", staffAToken, productBody(storeA, "staff-made", null)).andExpect(status().isOk());
@@ -461,7 +479,13 @@ class MultiTenantIsolationIT {
         send(POST, publicB + "/orders/lookup", null, lookup).andExpect(status().isNotFound());
         send(POST, "/api/public/stores/" + slugA + "/orders/lookup", null, lookup)
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.storeId").value(storeA));
+                .andExpect(jsonPath("$.data.orderCode").value(ORDER_CODE_A))
+                .andExpect(jsonPath("$.data.storeId").doesNotExist())
+                .andExpect(jsonPath("$.data.id").doesNotExist())
+                .andExpect(jsonPath("$.data.customerEmail").doesNotExist())
+                .andExpect(jsonPath("$.data.customerPhone").doesNotExist())
+                .andExpect(jsonPath("$.data.customerAddress").doesNotExist())
+                .andExpect(jsonPath("$.data.notes").doesNotExist());
 
         // Catalog reads: A's product slug doesn't resolve under B, and B's listing excludes it.
         send(GET, publicB + "/products/prod-a", null, null).andExpect(status().isNotFound());
@@ -504,6 +528,28 @@ class MultiTenantIsolationIT {
         send(GET, "/api/admin/security/login-attempts", ownerAToken, null).andExpect(status().isForbidden());
         send(GET, "/api/admin/security/login-attempts", staffAToken, null).andExpect(status().isForbidden());
         send(GET, "/api/admin/security/login-attempts", customerToken, null).andExpect(status().isForbidden());
+
+        // M2-14 regression: URL-level role denials are written directly as 403 JSON. The default
+        // handler's sendError re-dispatched to /error, where the JWT filter does not run, so on a real
+        // server the caller looked anonymous and got 401 (MockMvc skips that dispatch; the missing
+        // body is what gives the old behaviour away here).
+        String adminToken = jwtService.createAccessToken(saveUser(Role.SUPER_ADMIN, "wrong-surface-admin"));
+        for (String[] call : new String[][]{{adminToken, "/api/dashboard/stores/my"}, {adminToken, "/api/public/customers/me"},
+                {ownerAToken, "/api/public/customers/me"}, {customerToken, "/api/dashboard/products"}}) {
+            send(GET, call[1], call[0], null).andExpect(status().isForbidden()).andExpect(jsonPath("$.message").value("Access denied"));
+        }
+
+        // M2-14 regression: READ_ONLY_ADMIN is refused SUPER_ADMIN writes (403), and `permanent` is
+        // optional — it used to be a primitive, so any body omitting it was a 400 for every admin.
+        String readOnlyToken = jwtService.createAccessToken(saveUser(Role.READ_ONLY_ADMIN, "read-only-admin"));
+        String superToken = jwtService.createAccessToken(saveUser(Role.SUPER_ADMIN, "super-admin"));
+        String blockBody = "{\"ipAddress\":\"203.0.113.77\",\"reason\":\"m2-14\"}";
+        send(GET, "/api/admin/security/login-attempts", readOnlyToken, null).andExpect(status().isOk());
+        send(POST, "/api/admin/security/block-ip", readOnlyToken, blockBody).andExpect(status().isForbidden());
+        send(POST, "/api/admin/security/block-ip", ownerAToken, blockBody).andExpect(status().isForbidden());
+        send(POST, "/api/admin/security/block-ip", superToken, blockBody)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.permanent").value(false));
 
         // Since M1-06 guest checkout, order creation is open to anyone; a non-customer principal is
         // treated as a guest (CurrentUserService.customerOrNull) — never linked to the merchant.

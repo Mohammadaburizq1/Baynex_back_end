@@ -18,11 +18,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * with an entity-generated schema; the SQL fixture supplies the non-entity sales table.
  * This deliberately does not claim to validate the production Flyway migrations.
  */
-@org.springframework.boot.test.context.SpringBootTest(properties = {
-        "spring.flyway.enabled=false", "spring.jpa.hibernate.ddl-auto=create-drop",
-        "spring.datasource.url=jdbc:h2:mem:customer_history;MODE=PostgreSQL;DB_CLOSE_DELAY=-1"
-})
-@org.springframework.test.context.jdbc.Sql("/customer-history-schema.sql")
 class CustomerOrderHistoryTest extends ApiIT {
     private static final String HISTORY = "/api/public/customers/me/orders";
     private User a, b;
@@ -100,7 +95,8 @@ class CustomerOrderHistoryTest extends ApiIT {
         String code = order.getOrderCode();
         send(POST, "/api/public/stores/" + slug + "/orders/lookup", null,
                 "{\"orderCode\":\"" + code + "\",\"email\":\"" + a.getEmail() + "\"}")
-                .andExpect(status().isOk()).andExpect(jsonPath("$.data.id").value(guest));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.orderCode").value(code))
+                .andExpect(jsonPath("$.data.id").doesNotExist());
         send(POST, "/api/public/stores/" + slug + "/orders/lookup", null,
                 "{\"orderCode\":\"" + code + "\",\"email\":\"wrong@test.com\"}").andExpect(status().isNotFound());
         String laterEmail = "later-" + UUID.randomUUID() + "@example.test";

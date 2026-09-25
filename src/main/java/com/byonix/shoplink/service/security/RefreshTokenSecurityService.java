@@ -31,7 +31,7 @@ public class RefreshTokenSecurityService {
     private final RiskAssessmentService riskAssessmentService;
     private final UserRepository userRepository;
 
-    @Transactional
+    @Transactional(noRollbackFor = GenericAuthException.class)
     public RefreshToken resolveForRefresh(String rawToken, ClientRequestContext ctx, RefreshSessionScope expectedScope) {
         rateLimitService.checkRefreshByIp(ctx.ipAddress());
         String hash = tokenHashService.hash(rawToken);

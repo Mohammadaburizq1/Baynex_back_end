@@ -76,7 +76,10 @@ public class StaffService {
         staffInviteRepository.save(invite);
 
         devTokenLogger.logStaffInviteToken(email, raw);
-        emailNotificationService.sendStaffInvite(email, store.getName(), raw);
+        if (emailNotificationService.sendStaffInvite(email, store.getName(), raw)
+                == com.byonix.shoplink.service.notification.EmailNotificationService.DeliveryResult.FAILED) {
+            throw new IllegalStateException("Invitation email could not be delivered");
+        }
 
         return new StaffDtos.InviteResponse(invite.getId(), email, invite.getFullName(), invite.getExpiresAt());
     }
@@ -115,12 +118,7 @@ public class StaffService {
     // and the account's order/audit history stays intact.
     @Transactional
     public void deactivateStaff(UUID staffUserId) {
-        User staff = userRepository.findById(staffUserId)
-                .orElseThrow(() -> new EntityNotFoundException("Staff member not found"));
-        if (staff.getRole() != Role.MERCHANT_STAFF || staff.getStore() == null) {
-            throw new IllegalArgumentException("Not a staff member");
-        }
-        storeService.ownedStore(staff.getStore().getId());
+        User staff = loadOwnedStaff(staffUserId);
         staff.setActive(false);
         userRepository.save(staff);
     }
@@ -204,12 +202,12 @@ public class StaffService {
                 .toList();
     }
 
+    // Any user id that is not staff (another merchant, a customer, an admin) answers exactly like an
+    // unknown id, so the endpoint cannot be used to probe which ids belong to real accounts.
     private User loadOwnedStaff(UUID staffUserId) {
         User staff = userRepository.findById(staffUserId)
+                .filter(u -> u.getRole() == Role.MERCHANT_STAFF && u.getStore() != null)
                 .orElseThrow(() -> new EntityNotFoundException("Staff member not found"));
-        if (staff.getRole() != Role.MERCHANT_STAFF || staff.getStore() == null) {
-            throw new IllegalArgumentException("Not a staff member");
-        }
         storeService.ownedStore(staff.getStore().getId());
         return staff;
     }

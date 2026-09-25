@@ -1,6 +1,7 @@
 package com.byonix.shoplink.security;
 
 import com.byonix.shoplink.config.AuthProperties;
+import com.byonix.shoplink.domain.enums.RefreshSessionScope;
 import com.byonix.shoplink.security.login.GenericAuthException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,6 +25,12 @@ class RefreshTokenCredentialResolverTest {
     @InjectMocks RefreshTokenCredentialResolver resolver;
 
     @Test
+    void cookieOnlyRejectsBodyCredentials() {
+        when(authProperties.getRefreshTokenDelivery()).thenReturn(AuthProperties.RefreshTokenDelivery.COOKIE);
+        assertThrows(GenericAuthException.class, () -> resolver.resolve("body-token", request, RefreshSessionScope.CUSTOMER));
+    }
+
+    @Test
     void refreshWorksFromBodyWithoutAccessToken() {
         when(authProperties.getRefreshTokenDelivery()).thenReturn(AuthProperties.RefreshTokenDelivery.BODY);
         String token = resolver.resolve("body-refresh-token", request, false);
@@ -33,7 +40,8 @@ class RefreshTokenCredentialResolverTest {
     @Test
     void refreshWorksFromCookieWhenCookieOrBodyMode() {
         when(authProperties.getRefreshTokenDelivery()).thenReturn(AuthProperties.RefreshTokenDelivery.COOKIE_OR_BODY);
-        when(cookieService.readRefreshToken(request, false)).thenReturn(Optional.of("cookie-token"));
+        when(cookieService.readRefreshToken(request, RefreshSessionScope.MERCHANT))
+            .thenReturn(Optional.of("cookie-token"));
         String token = resolver.resolve(null, request, false);
         assertEquals("cookie-token", token);
     }

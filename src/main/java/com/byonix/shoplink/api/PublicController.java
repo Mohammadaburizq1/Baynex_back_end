@@ -65,6 +65,19 @@ public class PublicController {
         var storeResponse = storeService.publicStoreResponse(slug);
         var featured = catalogService.publicFeaturedProducts(slug);
         var categories = catalogService.publicStoreCategories(slug);
+        // Business hours come from M1-03 — never invent a fake "available" stub.
+        var hours = businessHoursService.publicHours(slug);
+        String hoursLabel = switch (hours.status() == null ? "" : hours.status()) {
+            case "OPEN" -> hours.closesAt() == null ? "Open now" : "Open now · closes at " + hours.closesAt();
+            case "CLOSED" -> hours.opensAt() == null ? "Closed" : "Closed · opens at " + hours.opensAt();
+            default -> "Hours not configured";
+        };
+        Map<String, Object> openingHours = Map.of(
+                "status", hours.status() == null ? "NOT_CONFIGURED" : hours.status(),
+                "configured", hours.configured(),
+                "timezone", hours.timezone() == null ? "" : hours.timezone(),
+                "label", hoursLabel
+        );
         HomepageResponse response = new HomepageResponse(
                 storeResponse,
                 storeResponse.templateKey(),
@@ -73,7 +86,7 @@ public class PublicController {
                 featured,
                 categories,
                 featured,
-                Map.of("status", "available"),
+                openingHours,
                 Map.of("phone", store.getPhone() == null ? "" : store.getPhone(), "address", store.getAddress() == null ? "" : store.getAddress()));
         return ApiResponse.ok(response);
     }
@@ -99,11 +112,12 @@ public class PublicController {
     }
 
     @PostMapping("/stores/{slug}/orders/lookup")
-    public ApiResponse<OrderDtos.OrderResponse> lookupOrder(@PathVariable String slug,
+    public ApiResponse<OrderDtos.TrackingResponse> lookupOrder(@PathVariable String slug,
                                                             @Valid @RequestBody OrderDtos.OrderLookupRequest request,
                                                             HttpServletRequest http) {
         rateLimitService.checkPublicOrderLookupByIp(ClientRequestContext.from(http).ipAddress());
-        return ApiResponse.ok(orderService.lookupPublicOrder(slug, request));
+        rateLimitService.checkPublicOrderLookupByCode(slug, request.orderCode());
+        return ApiResponse.ok(OrderDtos.TrackingResponse.from(orderService.lookupPublicOrder(slug, request)));
     }
 
     @GetMapping("/templates/category/{categorySlug}")

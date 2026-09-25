@@ -17,7 +17,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RateLimitFilter extends OncePerRequestFilter {
     private static final Set<String> DASHBOARD_MUTATING = Set.of("POST", "PUT", "PATCH", "DELETE");
 
-    private final Map<String, Window> windows = new ConcurrentHashMap<>();
+    private final com.byonix.shoplink.security.ratelimit.RateLimiter limiter;
+    public RateLimitFilter() { this(new com.byonix.shoplink.security.ratelimit.InMemoryRateLimiter()); }
+    @org.springframework.beans.factory.annotation.Autowired
+    public RateLimitFilter(com.byonix.shoplink.security.ratelimit.RateLimiter limiter) { this.limiter = limiter; }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -28,16 +31,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return;
         }
         String key = limit.name + ":" + clientIp(request);
-        long now = Instant.now().getEpochSecond();
-        Window window = windows.compute(key, (k, old) -> {
-            if (old == null || now >= old.resetAt) {
-                return new Window(now + limit.windowSeconds, 1);
-            }
-            old.count++;
-            return old;
-        });
-        if (window.count > limit.maxRequests) {
+        if (!limiter.tryConsume("route:" + key, limit.maxRequests, limit.windowSeconds)) {
             response.setStatus(429);
+            response.setHeader("Retry-After", Long.toString(limit.windowSeconds));
             response.setContentType("application/json");
             response.getWriter().write("{\"success\":false,\"message\":\"Too many requests\"}");
             return;
@@ -47,10 +43,18 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private Limit limitFor(HttpServletRequest request) {
         String method = request.getMethod();
-        String path = request.getRequestURI();
+        String path = request.getServletPath();
+        if (path == null || path.isEmpty()) path = request.getRequestURI();
 
-        if ("GET".equals(method) && path.startsWith("/api/public/")) {
+        if (("GET".equals(method) || "HEAD".equals(method))
+                && (path.startsWith("/api/auth/") || path.startsWith("/api/public/auth/") || path.startsWith("/api/admin/auth/"))) {
+            return new Limit("auth-read", 20, 60);
+        }
+        if (("GET".equals(method) || "HEAD".equals(method)) && path.startsWith("/api/public/")) {
             return new Limit("public-read", 600, 60);
+        }
+        if ("GET".equals(method) && path.startsWith("/api/pos/")) {
+            return new Limit("pos-read", 120, 60);
         }
         if ("GET".equals(method) && path.startsWith("/api/dashboard/")) {
             return new Limit("dashboard-read", 300, 60);
@@ -62,6 +66,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         if (!"POST".equals(method)) {
             return null;
         }
+        if (path.equals("/api/pos/activate")) return new Limit("pos-activate", 10, 300);
         if (path.equals("/api/auth/login")) return new Limit("login", 10, 60);
         if (path.equals("/api/auth/login-phone")) return new Limit("login-phone", 10, 60);
         if (path.equals("/api/auth/google")) return new Limit("google-login", 10, 60);
@@ -90,14 +95,14 @@ public class RateLimitFilter extends OncePerRequestFilter {
         if (path.matches("^/api/public/stores/[^/]+/orders/lookup$")) {
             return new Limit("public-order-lookup", 20, 300);
         }
+        if (path.startsWith("/api/auth/") || path.startsWith("/api/admin/auth/") || path.startsWith("/api/public/auth/")) {
+            return new Limit("auth-other", 10, 300);
+        }
+        if (path.startsWith("/api/public/")) return new Limit("public-write", 30, 60);
         return null;
     }
 
     private String clientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
-        }
         return request.getRemoteAddr();
     }
 

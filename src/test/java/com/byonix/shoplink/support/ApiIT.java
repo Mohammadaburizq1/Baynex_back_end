@@ -53,6 +53,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @WebAppConfiguration
 @ActiveProfiles("test")
+@org.springframework.test.context.ContextConfiguration(initializers = com.byonix.shoplink.support.PostgresTestDatabase.class)
 @Transactional
 public abstract class ApiIT {
     private static final AtomicInteger IP_COUNTER = new AtomicInteger();

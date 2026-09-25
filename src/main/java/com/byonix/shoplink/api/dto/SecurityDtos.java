@@ -58,7 +58,7 @@ public final class SecurityDtos {
             @NotBlank @Size(max = 64) String ipAddress,
             @NotBlank @Size(max = 500) String reason,
             Instant blockedUntil,
-            boolean permanent) {}
+            Boolean permanent) {} // optional: a primitive here made Jackson 3 reject any body that omitted it
 
     public record UnlockUserRequest(@Size(max = 500) String note) {}
 

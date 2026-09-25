@@ -20,6 +20,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
@@ -36,14 +37,18 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final RateLimitFilter rateLimitFilter;
     private final HstsProperties hstsProperties;
+    private final com.byonix.shoplink.service.PosDeviceService posDeviceService;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    @Value("${app.swagger.enabled:true}")
+    private boolean swaggerEnabled;
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(ex -> ex.authenticationEntryPoint(unauthenticatedEntryPoint()))
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(unauthenticatedEntryPoint())
+                        .accessDeniedHandler(forbiddenHandler()))
                 .headers(headers -> {
                     headers.contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; frame-ancestors 'none'"))
                             .contentTypeOptions(Customizer.withDefaults())
@@ -57,7 +62,9 @@ public class SecurityConfig {
                                 .preload(hstsProperties.isPreload()));
                     }
                 })
-                .authorizeHttpRequests(auth -> auth
+                .authorizeHttpRequests(auth -> {
+                    if (!swaggerEnabled) auth.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").denyAll();
+                    auth
                         .requestMatchers(
                                 "/api/auth/me", "/api/auth/sessions", "/api/auth/sessions/**",
                                 "/api/auth/logout-all", "/api/auth/security/**", "/api/auth/change-password")
@@ -73,6 +80,10 @@ public class SecurityConfig {
                                 "/api/admin/auth/forgot-password",
                                 "/api/admin/auth/reset-password")
                         .permitAll()
+                        // POS devices (POS-02/04): activation is public (rate limited, single-use code);
+                        // everything else under /api/pos needs a device credential and nothing else admits one.
+                        .requestMatchers(HttpMethod.POST, "/api/pos/activate").permitAll()
+                        .requestMatchers("/api/pos/**").hasRole("POS_DEVICE")
                         .requestMatchers("/api/public/auth/me", "/api/public/customers/**").hasRole("CUSTOMER")
                         .requestMatchers(HttpMethod.POST, "/api/public/stores/*/orders").permitAll()
                         // Uploaded catalogue pictures are shown on public storefronts.
@@ -82,9 +93,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**", "/api/public/**", "/swagger-ui.html", "/swagger-ui/**",
                                 "/v3/api-docs/**", "/actuator/health").permitAll()
                         .requestMatchers("/api/dashboard/**").hasAnyRole("MERCHANT_OWNER", "MERCHANT_STAFF")
-                        .anyRequest().authenticated())
+                        .anyRequest().authenticated();
+                })
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(new com.byonix.shoplink.security.pos.PosDeviceAuthenticationFilter(posDeviceService), JwtAuthenticationFilter.class);
         return http.build();
     }
 
@@ -100,6 +113,20 @@ public class SecurityConfig {
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             objectMapper.writeValue(response.getWriter(), ApiResponse.error("Authentication required"));
+        };
+    }
+
+    /**
+     * An authenticated caller with the wrong role (admin token on the dashboard, merchant token on a
+     * customer API). The default AccessDeniedHandlerImpl calls sendError(403), which re-dispatches to
+     * /error where the JWT filter does not run, so the caller looked anonymous and got a 401 — sending
+     * the frontend into a pointless refresh-and-retry. Write the 403 directly, like the entry point.
+     */
+    private AccessDeniedHandler forbiddenHandler() {
+        return (request, response, accessDeniedException) -> {
+            response.setStatus(HttpStatus.FORBIDDEN.value());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            objectMapper.writeValue(response.getWriter(), ApiResponse.error("Access denied"));
         };
     }
 

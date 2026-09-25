@@ -1,0 +1,647 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------< com.byonix:shoplink-backend >---------------------
+[INFO] Building shoplink-backend 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ shoplink-backend ---
+[INFO] Copying 3 resources from src\main\resources to target\classes
+[INFO] Copying 35 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ shoplink-backend ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ shoplink-backend ---
+[INFO] Copying 1 resource from src\test\resources to target\test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ shoplink-backend ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.5:test (default-test) @ shoplink-backend ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.byonix.shoplink.api.AuthLogoutResponseTest
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.421 s -- in com.byonix.shoplink.api.AuthLogoutResponseTest
+[INFO] Running com.byonix.shoplink.api.CustomerProfileControllerTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.692 s -- in com.byonix.shoplink.api.CustomerProfileControllerTest
+[INFO] Running com.byonix.shoplink.api.dto.validation.OrderLookupValidatorTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.039 s -- in com.byonix.shoplink.api.dto.validation.OrderLookupValidatorTest
+[INFO] Running com.byonix.shoplink.AuthFailurePersistenceIT
+23:32:59.841 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.byonix.shoplink.support.ApiIT]: ApiIT does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+23:33:00.472 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.byonix.shoplink.ShoplinkBackendApplication for test class com.byonix.shoplink.AuthFailurePersistenceIT
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.6)
+
+2026-09-25T23:33:01.867+03:00  INFO 31420 --- [shoplink-backend] [           main] org.testcontainers.images.PullPolicy     : Image pull policy will be performed by: DefaultPullPolicy()
+2026-09-25T23:33:01.872+03:00  INFO 31420 --- [shoplink-backend] [           main] o.t.utility.ImageNameSubstitutor         : Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
+2026-09-25T23:33:01.895+03:00  INFO 31420 --- [shoplink-backend] [           main] org.testcontainers.DockerClientFactory   : Testcontainers version: 2.0.5
+2026-09-25T23:33:02.783+03:00  INFO 31420 --- [shoplink-backend] [           main] o.t.d.DockerClientProviderStrategy       : Loaded org.testcontainers.dockerclient.NpipeSocketClientProviderStrategy from ~/.testcontainers.properties, will try it first
+2026-09-25T23:33:04.287+03:00  INFO 31420 --- [shoplink-backend] [           main] o.t.d.DockerClientProviderStrategy       : Found Docker environment with local Npipe socket (npipe:////./pipe/docker_engine)
+2026-09-25T23:33:04.291+03:00  INFO 31420 --- [shoplink-backend] [           main] org.testcontainers.DockerClientFactory   : Docker host IP address is localhost
+2026-09-25T23:33:04.317+03:00  INFO 31420 --- [shoplink-backend] [           main] org.testcontainers.DockerClientFactory   : Connected to docker: 
+  Server Version: 29.7.2
+  API Version: 1.55
+  Operating System: Docker Desktop
+  Total Memory: 15798 MB
+  Labels: 
+    com.docker.desktop.address=npipe://\\.\pipe\docker_cli
+2026-09-25T23:33:04.524+03:00  INFO 31420 --- [shoplink-backend] [           main] tc.testcontainers/ryuk:0.14.0            : Creating container for image: testcontainers/ryuk:0.14.0
+2026-09-25T23:33:04.854+03:00  INFO 31420 --- [shoplink-backend] [           main] tc.testcontainers/ryuk:0.14.0            : Container testcontainers/ryuk:0.14.0 is starting: 908be7f7b786955c37d756ae983fbf9eeda5c831b460ed290207b5c525eea127
+2026-09-25T23:33:05.286+03:00  INFO 31420 --- [shoplink-backend] [           main] tc.testcontainers/ryuk:0.14.0            : Container testcontainers/ryuk:0.14.0 started in PT0.7616291S
+2026-09-25T23:33:05.296+03:00  INFO 31420 --- [shoplink-backend] [           main] o.t.utility.RyukResourceReaper           : Ryuk started - will monitor and terminate Testcontainers containers on JVM exit
+2026-09-25T23:33:05.297+03:00  INFO 31420 --- [shoplink-backend] [           main] org.testcontainers.DockerClientFactory   : Checking the system...
+2026-09-25T23:33:05.298+03:00  INFO 31420 --- [shoplink-backend] [           main] org.testcontainers.DockerClientFactory   : ?? Docker server version should be at least 1.6.0
+2026-09-25T23:33:05.299+03:00  INFO 31420 --- [shoplink-backend] [           main] tc.postgres:16-alpine                    : Creating container for image: postgres:16-alpine
+2026-09-25T23:33:05.377+03:00  INFO 31420 --- [shoplink-backend] [           main] tc.postgres:16-alpine                    : Container postgres:16-alpine is starting: 093de8d889abb609ba7b14a5c03677f305bd9ac987b0f1e77d56311c21eb4501
+2026-09-25T23:33:06.731+03:00  INFO 31420 --- [shoplink-backend] [           main] tc.postgres:16-alpine                    : Container postgres:16-alpine started in PT1.4325942S
+2026-09-25T23:33:06.733+03:00  INFO 31420 --- [shoplink-backend] [           main] tc.postgres:16-alpine                    : Container is started (JDBC URL: jdbc:postgresql://localhost:62643/test?loggerLevel=OFF)
+2026-09-25T23:33:06.740+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.shoplink.AuthFailurePersistenceIT    : Starting AuthFailurePersistenceIT using Java 17.0.18 with PID 31420 (started by user in C:\Users\user\Desktop\shop\shoplink_backend)
+2026-09-25T23:33:06.742+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.shoplink.AuthFailurePersistenceIT    : The following 1 profile is active: "test"
+2026-09-25T23:33:09.938+03:00  INFO 31420 --- [shoplink-backend] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-25T23:33:10.275+03:00  INFO 31420 --- [shoplink-backend] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 281 ms. Found 29 JPA repository interfaces.
+2026-09-25T23:33:13.720+03:00  INFO 31420 --- [shoplink-backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-09-25T23:33:14.025+03:00  INFO 31420 --- [shoplink-backend] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@70f5f6c7
+2026-09-25T23:33:14.028+03:00  INFO 31420 --- [shoplink-backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-09-25T23:33:14.167+03:00  INFO 31420 --- [shoplink-backend] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://localhost:62643/test?loggerLevel=OFF (PostgreSQL 16.15)
+2026-09-25T23:33:14.435+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.c.i.s.JdbcTableSchemaHistory         : Schema history table "public"."flyway_schema_history" does not exist yet
+2026-09-25T23:33:14.462+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 35 migrations (execution time 00:00.163s)
+2026-09-25T23:33:14.514+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table "public"."flyway_schema_history" ...
+2026-09-25T23:33:14.643+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": << Empty Schema >>
+2026-09-25T23:33:14.697+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "1 - init schema"
+2026-09-25T23:33:14.859+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "2 - seed business categories"
+2026-09-25T23:33:14.892+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "3 - seed restaurant templates"
+2026-09-25T23:33:14.931+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "4 - seed demo restaurant store"
+2026-09-25T23:33:14.967+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "5 - email verify and password reset"
+2026-09-25T23:33:15.010+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "6 - daily store sales view"
+2026-09-25T23:33:15.041+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "7 - daily store sales table"
+2026-09-25T23:33:15.080+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "8 - login security"
+2026-09-25T23:33:15.157+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "9 - production auth hardening"
+2026-09-25T23:33:15.188+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "10 - refresh token session scope"
+2026-09-25T23:33:15.202+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.c.i.s.DefaultSqlScriptExecutor       : DB: constraint "refresh_tokens_session_scope_check" of relation "refresh_tokens" does not exist, skipping
+2026-09-25T23:33:15.226+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "11 - customer auth and oauth"
+2026-09-25T23:33:15.258+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "12 - align store template key with sub category"
+2026-09-25T23:33:15.283+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "13 - add coffee beans subcategory"
+2026-09-25T23:33:15.323+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "14 - add coffee smooth subcategory"
+2026-09-25T23:33:15.350+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "15 - nullable user email"
+2026-09-25T23:33:15.378+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "16 - link orders to customer"
+2026-09-25T23:33:15.402+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "17 - delivery zones"
+2026-09-25T23:33:15.433+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "18 - phone otp verification"
+2026-09-25T23:33:15.462+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "19 - store creation idempotency"
+2026-09-25T23:33:15.492+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "20 - staff invites"
+2026-09-25T23:33:15.527+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "21 - product stock"
+2026-09-25T23:33:15.549+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "22 - customer order fk on delete"
+2026-09-25T23:33:15.576+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "23 - offers"
+2026-09-25T23:33:15.605+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "24 - staff permissions"
+2026-09-25T23:33:15.631+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "25 - appointments"
+2026-09-25T23:33:15.669+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "26 - store theme content"
+2026-09-25T23:33:15.698+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "27 - staff permissions storefront section"
+2026-09-25T23:33:15.724+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "28 - product variants"
+2026-09-25T23:33:15.778+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "29 - product modifiers"
+2026-09-25T23:33:15.819+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "30 - inventory"
+2026-09-25T23:33:15.857+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "31 - product images"
+2026-09-25T23:33:15.885+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "32 - order payment status"
+2026-09-25T23:33:15.906+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "33 - store currency timezone locale and order currency"
+2026-09-25T23:33:15.932+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "34 - store business hours"
+2026-09-25T23:33:15.958+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "35 - store accepting orders"
+2026-09-25T23:33:15.981+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Successfully applied 35 migrations to schema "public", now at version v35 (execution time 00:00.594s)
+2026-09-25T23:33:16.353+03:00  INFO 31420 --- [shoplink-backend] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-09-25T23:33:16.544+03:00  INFO 31420 --- [shoplink-backend] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.12.Final
+2026-09-25T23:33:17.492+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-25T23:33:17.752+03:00  INFO 31420 --- [shoplink-backend] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:62643/test?loggerLevel=OFF]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 16.15
+	Default catalog/schema: test/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-25T23:33:21.179+03:00  INFO 31420 --- [shoplink-backend] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-25T23:33:21.302+03:00  INFO 31420 --- [shoplink-backend] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-25T23:33:21.522+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-09-25T23:33:30.612+03:00  INFO 31420 --- [shoplink-backend] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name appUserDetailsService
+2026-09-25T23:33:33.477+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-09-25T23:33:33.658+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.shoplink.AuthFailurePersistenceIT    : Started AuthFailurePersistenceIT in 32.862 seconds (process running for 39.895)
+2026-09-25T23:33:33.861+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:33.861+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:33.864+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:34.721+03:00  WARN 31420 --- [shoplink-backend] [           main] o.s.s.c.bcrypt.BCryptPasswordEncoder     : Encoded password does not look like BCrypt
+2026-09-25T23:33:34.911+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:34.911+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:34.915+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:36.184+03:00  WARN 31420 --- [shoplink-backend] [           main] c.b.s.s.security.SecurityAlertService    : SECURITY_ALERT type=REFRESH_TOKEN_REUSE_DETECTED user=e622c5bd-8a2a-4389-87a2-27d9b7f8ec3f riskScore=100
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 37.89 s -- in com.byonix.shoplink.AuthFailurePersistenceIT
+[INFO] Running com.byonix.shoplink.CatalogCategoriesSkuIT
+2026-09-25T23:33:36.269+03:00  INFO 31420 --- [shoplink-backend] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.byonix.shoplink.support.ApiIT]: ApiIT does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-25T23:33:36.274+03:00  INFO 31420 --- [shoplink-backend] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.byonix.shoplink.ShoplinkBackendApplication for test class com.byonix.shoplink.CatalogCategoriesSkuIT
+2026-09-25T23:33:36.290+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:36.290+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:36.292+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:36.828+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:36.828+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:36.831+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:37.134+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:37.135+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:37.137+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:37.346+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:37.347+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:37.350+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:37.520+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:37.520+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:37.523+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:37.612+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:37.612+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:37.614+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.586 s -- in com.byonix.shoplink.CatalogCategoriesSkuIT
+[INFO] Running com.byonix.shoplink.CatalogModifiersIT
+2026-09-25T23:33:37.855+03:00  INFO 31420 --- [shoplink-backend] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.byonix.shoplink.support.ApiIT]: ApiIT does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-25T23:33:37.858+03:00  INFO 31420 --- [shoplink-backend] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.byonix.shoplink.ShoplinkBackendApplication for test class com.byonix.shoplink.CatalogModifiersIT
+2026-09-25T23:33:37.866+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:37.866+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:37.869+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:38.357+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:38.357+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:38.359+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:38.857+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:38.857+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:38.858+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-09-25T23:33:39.307+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:39.307+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:39.310+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:39.713+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:39.713+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:39.715+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-09-25T23:33:40.042+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:40.042+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:40.045+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:40.517+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:40.517+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:40.521+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:40.779+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:40.779+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:40.782+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.307 s -- in com.byonix.shoplink.CatalogModifiersIT
+[INFO] Running com.byonix.shoplink.CatalogVariantsIT
+2026-09-25T23:33:41.164+03:00  INFO 31420 --- [shoplink-backend] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.byonix.shoplink.support.ApiIT]: ApiIT does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-25T23:33:41.168+03:00  INFO 31420 --- [shoplink-backend] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.byonix.shoplink.ShoplinkBackendApplication for test class com.byonix.shoplink.CatalogVariantsIT
+2026-09-25T23:33:41.176+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:41.176+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:41.179+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:41.401+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:41.401+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:41.403+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:41.620+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:41.621+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:41.623+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:41.964+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:41.964+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:41.967+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:42.247+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:42.248+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:42.250+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:42.444+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:42.444+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:42.446+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:42.692+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:42.692+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:42.693+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-09-25T23:33:43.074+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:43.074+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:43.076+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:43.429+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:43.429+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:43.431+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:43.657+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:43.657+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:43.658+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-09-25T23:33:44.011+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:44.011+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:44.014+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:44.279+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:44.279+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:44.282+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+[INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.343 s -- in com.byonix.shoplink.CatalogVariantsIT
+[INFO] Running com.byonix.shoplink.common.ErrorPrivacyTest
+2026-09-25T23:33:44.518+03:00 ERROR 31420 --- [shoplink-backend] [           main] c.b.s.common.GlobalExceptionHandler      : Unhandled error id=45a25397-8d29-467b-bcde-371a51544581 type=java.lang.RuntimeException location=com.byonix.shoplink.common.ErrorPrivacyTest.unexpectedErrorDoesNotLogExceptionPayload(ErrorPrivacyTest.java:11)
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.021 s -- in com.byonix.shoplink.common.ErrorPrivacyTest
+[INFO] Running com.byonix.shoplink.config.ProductionConfigurationRejectionTest
+2026-09-25T23:33:44.536+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+2026-09-25T23:33:44.541+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+2026-09-25T23:33:44.542+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+2026-09-25T23:33:44.543+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+2026-09-25T23:33:44.543+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+2026-09-25T23:33:44.543+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+2026-09-25T23:33:44.543+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+2026-09-25T23:33:44.544+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+2026-09-25T23:33:44.545+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+2026-09-25T23:33:44.545+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+2026-09-25T23:33:44.545+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+2026-09-25T23:33:44.546+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+2026-09-25T23:33:44.547+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+2026-09-25T23:33:44.547+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+2026-09-25T23:33:44.548+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+2026-09-25T23:33:44.548+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+2026-09-25T23:33:44.548+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+2026-09-25T23:33:44.549+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+2026-09-25T23:33:44.549+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.022 s -- in com.byonix.shoplink.config.ProductionConfigurationRejectionTest
+[INFO] Running com.byonix.shoplink.config.ProductionCorsTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.003 s -- in com.byonix.shoplink.config.ProductionCorsTest
+[INFO] Running com.byonix.shoplink.config.ProductionJwtSecretTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.003 s -- in com.byonix.shoplink.config.ProductionJwtSecretTest
+[INFO] Running com.byonix.shoplink.config.ProductionSecurityValidatorTest
+2026-09-25T23:33:44.869+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+2026-09-25T23:33:44.880+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+2026-09-25T23:33:44.885+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.312 s -- in com.byonix.shoplink.config.ProductionSecurityValidatorTest
+[INFO] Running com.byonix.shoplink.CustomerOrderHistoryTest
+2026-09-25T23:33:44.891+03:00  INFO 31420 --- [shoplink-backend] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.byonix.shoplink.support.ApiIT]: ApiIT does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-25T23:33:44.894+03:00  INFO 31420 --- [shoplink-backend] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.byonix.shoplink.ShoplinkBackendApplication for test class com.byonix.shoplink.CustomerOrderHistoryTest
+2026-09-25T23:33:44.903+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:44.903+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:44.906+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:45.021+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:45.021+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:45.023+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:45.159+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:45.159+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:45.161+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-09-25T23:33:45.382+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:45.383+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:45.385+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:45.938+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.s.n.EmailNotificationService       : Transactional email skipped: delivery disabled or unconfigured
+2026-09-25T23:33:45.967+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:45.967+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:45.969+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.188 s -- in com.byonix.shoplink.CustomerOrderHistoryTest
+[INFO] Running com.byonix.shoplink.CustomerProfileTest
+2026-09-25T23:33:46.081+03:00  INFO 31420 --- [shoplink-backend] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.byonix.shoplink.support.ApiIT]: ApiIT does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-25T23:33:46.083+03:00  INFO 31420 --- [shoplink-backend] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.byonix.shoplink.ShoplinkBackendApplication for test class com.byonix.shoplink.CustomerProfileTest
+2026-09-25T23:33:46.091+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:46.091+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:46.093+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:46.172+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:46.172+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:46.174+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:46.199+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:46.199+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:46.201+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:46.283+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:46.283+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:46.285+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:46.336+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:46.336+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:46.338+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:46.359+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:46.359+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:46.362+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:46.393+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:46.393+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:46.394+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.365 s -- in com.byonix.shoplink.CustomerProfileTest
+[INFO] Running com.byonix.shoplink.GuestCheckoutInventoryIT
+2026-09-25T23:33:46.448+03:00  INFO 31420 --- [shoplink-backend] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.byonix.shoplink.support.ApiIT]: ApiIT does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-25T23:33:46.452+03:00  INFO 31420 --- [shoplink-backend] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.byonix.shoplink.ShoplinkBackendApplication for test class com.byonix.shoplink.GuestCheckoutInventoryIT
+2026-09-25T23:33:46.459+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:46.459+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:46.463+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 4 ms
+2026-09-25T23:33:46.536+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:46.536+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:46.539+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.174 s -- in com.byonix.shoplink.GuestCheckoutInventoryIT
+[INFO] Running com.byonix.shoplink.InventoryIT
+2026-09-25T23:33:46.625+03:00  INFO 31420 --- [shoplink-backend] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.byonix.shoplink.support.ApiIT]: ApiIT does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-25T23:33:46.629+03:00  INFO 31420 --- [shoplink-backend] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.byonix.shoplink.ShoplinkBackendApplication for test class com.byonix.shoplink.InventoryIT
+2026-09-25T23:33:46.637+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:46.637+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:46.639+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:46.941+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:46.941+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:46.943+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:47.147+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:47.148+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:47.151+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:47.311+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:47.312+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:47.314+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:47.488+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:47.489+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:47.495+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 6 ms
+2026-09-25T23:33:47.760+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:47.760+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:47.762+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-09-25T23:33:47.948+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:47.948+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:47.951+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:48.138+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:48.138+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:48.139+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-09-25T23:33:48.485+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:48.486+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:48.487+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-09-25T23:33:48.826+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:48.826+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:48.829+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:48.997+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:48.998+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:49.001+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.530 s -- in com.byonix.shoplink.InventoryIT
+[INFO] Running com.byonix.shoplink.MultiTenantIsolationIT
+2026-09-25T23:33:49.160+03:00  INFO 31420 --- [shoplink-backend] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.byonix.shoplink.MultiTenantIsolationIT]: MultiTenantIsolationIT does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-25T23:33:49.162+03:00  INFO 31420 --- [shoplink-backend] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.byonix.shoplink.ShoplinkBackendApplication for test class com.byonix.shoplink.MultiTenantIsolationIT
+2026-09-25T23:33:49.168+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:49.168+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:49.170+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:49.432+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:49.432+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:49.434+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:49.618+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:49.618+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:49.621+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:49.760+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:49.760+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:49.762+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:49.912+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:49.913+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:49.915+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:50.126+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:50.126+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:50.129+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:50.270+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:50.270+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:50.272+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:50.403+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:50.404+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:50.405+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-09-25T23:33:50.548+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:50.548+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:50.551+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:50.764+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:50.764+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:50.766+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:50.923+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:50.924+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:50.926+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:51.098+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:51.098+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:51.100+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:51.358+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:51.358+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:51.361+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:51.508+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:51.508+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:51.509+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-09-25T23:33:51.769+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:51.769+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:51.771+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:51.987+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:51.987+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:51.989+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:52.122+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:52.122+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:52.124+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:52.260+03:00  WARN 31420 --- [shoplink-backend] [           main] ration$PageModule$WarningLoggingModifier : Serializing PageImpl instances as-is is not supported, meaning that there is no guarantee about the stability of the resulting JSON structure!
+	For a stable JSON structure, please use Spring Data's PagedModel (globally via @EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO))
+	or Spring HATEOAS and Spring Data's PagedResourcesAssembler as documented in https://docs.spring.io/spring-data/commons/reference/repositories/core-extensions.html#core.web.pageables.
+
+2026-09-25T23:33:52.334+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:52.334+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:52.338+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 4 ms
+[INFO] Tests run: 18, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.366 s -- in com.byonix.shoplink.MultiTenantIsolationIT
+[INFO] Running com.byonix.shoplink.OrderPaymentStatusIT
+2026-09-25T23:33:52.526+03:00  INFO 31420 --- [shoplink-backend] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.byonix.shoplink.support.ApiIT]: ApiIT does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-25T23:33:52.528+03:00  INFO 31420 --- [shoplink-backend] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.byonix.shoplink.ShoplinkBackendApplication for test class com.byonix.shoplink.OrderPaymentStatusIT
+2026-09-25T23:33:52.537+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:52.537+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:52.542+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 5 ms
+2026-09-25T23:33:52.615+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:52.616+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:52.619+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:52.701+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:52.701+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:52.705+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 4 ms
+2026-09-25T23:33:52.838+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:52.838+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:52.841+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.377 s -- in com.byonix.shoplink.OrderPaymentStatusIT
+[INFO] Running com.byonix.shoplink.ProductImageIT
+2026-09-25T23:33:52.904+03:00  INFO 31420 --- [shoplink-backend] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.byonix.shoplink.support.ApiIT]: ApiIT does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-25T23:33:52.907+03:00  INFO 31420 --- [shoplink-backend] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.byonix.shoplink.ShoplinkBackendApplication for test class com.byonix.shoplink.ProductImageIT
+2026-09-25T23:33:52.913+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:52.913+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:52.915+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:52.989+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:52.989+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:52.991+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:53.112+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:53.112+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:53.114+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:53.237+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:53.238+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:53.241+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:53.476+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:53.476+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:53.480+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 4 ms
+2026-09-25T23:33:53.599+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:53.599+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:53.602+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:53.761+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:53.761+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:53.765+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 4 ms
+2026-09-25T23:33:53.914+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:53.914+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:53.916+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.085 s -- in com.byonix.shoplink.ProductImageIT
+[INFO] Running com.byonix.shoplink.ProductionConfigurationIT
+2026-09-25T23:33:53.992+03:00  INFO 31420 --- [shoplink-backend] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.byonix.shoplink.ProductionConfigurationIT]: ProductionConfigurationIT does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-25T23:33:53.994+03:00  INFO 31420 --- [shoplink-backend] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.byonix.shoplink.ShoplinkBackendApplication for test class com.byonix.shoplink.ProductionConfigurationIT
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.6)
+
+2026-09-25T23:33:54.087+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.shoplink.ProductionConfigurationIT   : Starting ProductionConfigurationIT using Java 17.0.18 with PID 31420 (started by user in C:\Users\user\Desktop\shop\shoplink_backend)
+2026-09-25T23:33:54.087+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.shoplink.ProductionConfigurationIT   : The following 1 profile is active: "prod"
+2026-09-25T23:33:54.779+03:00  INFO 31420 --- [shoplink-backend] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-25T23:33:54.909+03:00  INFO 31420 --- [shoplink-backend] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 126 ms. Found 29 JPA repository interfaces.
+2026-09-25T23:33:55.295+03:00  INFO 31420 --- [shoplink-backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Starting...
+2026-09-25T23:33:55.328+03:00  INFO 31420 --- [shoplink-backend] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-2 - Added connection org.postgresql.jdbc.PgConnection@74d7e77c
+2026-09-25T23:33:55.328+03:00  INFO 31420 --- [shoplink-backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Start completed.
+2026-09-25T23:33:55.331+03:00  INFO 31420 --- [shoplink-backend] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://localhost:62643/test?loggerLevel=OFF (PostgreSQL 16.15)
+2026-09-25T23:33:55.410+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 35 migrations (execution time 00:00.058s)
+2026-09-25T23:33:55.443+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": 35
+2026-09-25T23:33:55.445+03:00  INFO 31420 --- [shoplink-backend] [           main] o.f.core.internal.command.DbMigrate      : Schema "public" is up to date. No migration necessary.
+2026-09-25T23:33:55.513+03:00  INFO 31420 --- [shoplink-backend] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-09-25T23:33:55.715+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-25T23:33:55.725+03:00  INFO 31420 --- [shoplink-backend] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:62643/test?loggerLevel=OFF]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 16.15
+	Default catalog/schema: test/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-25T23:33:56.592+03:00  INFO 31420 --- [shoplink-backend] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-25T23:33:56.687+03:00  INFO 31420 --- [shoplink-backend] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-25T23:33:57.723+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+2026-09-25T23:33:58.474+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-09-25T23:33:58.525+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.shoplink.ProductionConfigurationIT   : Started ProductionConfigurationIT in 4.519 seconds (process running for 64.764)
+2026-09-25T23:33:58.528+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.c.ProductionSecurityValidator      : Validating production security configuration
+2026-09-25T23:33:58.536+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:58.536+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:58.539+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:58.741+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:58.741+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:58.746+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 5 ms
+2026-09-25T23:33:58.939+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:58.939+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:58.941+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-25T23:33:58.952+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:58.952+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:58.954+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.974 s -- in com.byonix.shoplink.ProductionConfigurationIT
+[INFO] Running com.byonix.shoplink.ReportsCsvIT
+2026-09-25T23:33:58.971+03:00  INFO 31420 --- [shoplink-backend] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.byonix.shoplink.support.ApiIT]: ApiIT does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-25T23:33:58.975+03:00  INFO 31420 --- [shoplink-backend] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.byonix.shoplink.ShoplinkBackendApplication for test class com.byonix.shoplink.ReportsCsvIT
+2026-09-25T23:33:58.987+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:58.987+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:58.991+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 4 ms
+2026-09-25T23:33:59.307+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:59.307+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:59.313+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 5 ms
+2026-09-25T23:33:59.457+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:59.457+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:59.461+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 4 ms
+2026-09-25T23:33:59.623+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:59.623+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:59.628+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 5 ms
+2026-09-25T23:33:59.753+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:59.753+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:59.756+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-09-25T23:33:59.843+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:33:59.843+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:33:59.847+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 4 ms
+2026-09-25T23:34:00.044+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:34:00.044+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:34:00.050+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 6 ms
+2026-09-25T23:34:00.154+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:34:00.155+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:34:00.159+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 4 ms
+2026-09-25T23:34:00.217+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:34:00.217+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:34:00.221+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 4 ms
+2026-09-25T23:34:00.302+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:34:00.302+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:34:00.307+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 4 ms
+2026-09-25T23:34:00.385+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:34:00.385+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:34:00.389+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 4 ms
+[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.517 s -- in com.byonix.shoplink.ReportsCsvIT
+[INFO] Running com.byonix.shoplink.security.AuthorizationExpressionsTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.021 s -- in com.byonix.shoplink.security.AuthorizationExpressionsTest
+[INFO] Running com.byonix.shoplink.security.google.GoogleTokenVerifierTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.050 s -- in com.byonix.shoplink.security.google.GoogleTokenVerifierTest
+[INFO] Running com.byonix.shoplink.security.ratelimit.GoogleLoginRateLimitTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.010 s -- in com.byonix.shoplink.security.ratelimit.GoogleLoginRateLimitTest
+[INFO] Running com.byonix.shoplink.security.ratelimit.PublicOrderLookupRateLimitTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.011 s -- in com.byonix.shoplink.security.ratelimit.PublicOrderLookupRateLimitTest
+[INFO] Running com.byonix.shoplink.security.ratelimit.RateLimitServiceTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.007 s -- in com.byonix.shoplink.security.ratelimit.RateLimitServiceTest
+[INFO] Running com.byonix.shoplink.security.RateLimitFilterTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.191 s -- in com.byonix.shoplink.security.RateLimitFilterTest
+[INFO] Running com.byonix.shoplink.security.RefreshTokenCookieSeparationTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.198 s -- in com.byonix.shoplink.security.RefreshTokenCookieSeparationTest
+[INFO] Running com.byonix.shoplink.security.RefreshTokenCredentialResolverTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.197 s -- in com.byonix.shoplink.security.RefreshTokenCredentialResolverTest
+[INFO] Running com.byonix.shoplink.security.SecurityHeadersConfigTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.045 s -- in com.byonix.shoplink.security.SecurityHeadersConfigTest
+[INFO] Running com.byonix.shoplink.service.AuthServiceGoogleLoginTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.181 s -- in com.byonix.shoplink.service.AuthServiceGoogleLoginTest
+[INFO] Running com.byonix.shoplink.service.BusinessHoursServiceTest
+[INFO] Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.439 s -- in com.byonix.shoplink.service.BusinessHoursServiceTest
+[INFO] Running com.byonix.shoplink.service.EmailReliabilityTest
+2026-09-25T23:34:05.345+03:00  WARN 31420 --- [shoplink-backend] [           main] c.b.s.s.n.EmailNotificationService       : Transactional email attempt=1 failed type=MailSendException
+2026-09-25T23:34:05.468+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.s.n.EmailNotificationService       : Transactional email accepted by SMTP
+2026-09-25T23:34:05.487+03:00  WARN 31420 --- [shoplink-backend] [           main] c.b.s.s.n.EmailNotificationService       : Transactional email attempt=1 failed type=MailSendException
+2026-09-25T23:34:05.613+03:00  WARN 31420 --- [shoplink-backend] [           main] c.b.s.s.n.EmailNotificationService       : Transactional email attempt=2 failed type=MailSendException
+2026-09-25T23:34:05.843+03:00  WARN 31420 --- [shoplink-backend] [           main] c.b.s.s.n.EmailNotificationService       : Transactional email attempt=3 failed type=MailSendException
+2026-09-25T23:34:05.845+03:00  INFO 31420 --- [shoplink-backend] [           main] c.b.s.s.n.EmailNotificationService       : Transactional email skipped: delivery disabled or unconfigured
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.983 s -- in com.byonix.shoplink.service.EmailReliabilityTest
+[INFO] Running com.byonix.shoplink.service.InventoryLedgerTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.272 s -- in com.byonix.shoplink.service.InventoryLedgerTest
+[INFO] Running com.byonix.shoplink.service.MapperServiceTemplateKeyTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.005 s -- in com.byonix.shoplink.service.MapperServiceTemplateKeyTest
+[INFO] Running com.byonix.shoplink.service.OrderServiceAcceptanceTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.022 s -- in com.byonix.shoplink.service.OrderServiceAcceptanceTest
+[INFO] Running com.byonix.shoplink.service.OrderServiceFulfillmentTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.234 s -- in com.byonix.shoplink.service.OrderServiceFulfillmentTest
+[INFO] Running com.byonix.shoplink.service.OrderServiceLookupTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.031 s -- in com.byonix.shoplink.service.OrderServiceLookupTest
+[INFO] Running com.byonix.shoplink.service.OrderServicePaymentStatusTransitionTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.036 s -- in com.byonix.shoplink.service.OrderServicePaymentStatusTransitionTest
+[INFO] Running com.byonix.shoplink.service.OrderServiceStatusTransitionTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.036 s -- in com.byonix.shoplink.service.OrderServiceStatusTransitionTest
+[INFO] Running com.byonix.shoplink.service.PasswordHashServiceTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.138 s -- in com.byonix.shoplink.service.PasswordHashServiceTest
+[INFO] Running com.byonix.shoplink.service.security.AccountLockServiceTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.180 s -- in com.byonix.shoplink.service.security.AccountLockServiceTest
+[INFO] Running com.byonix.shoplink.service.security.AdminMfaFlowTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.028 s -- in com.byonix.shoplink.service.security.AdminMfaFlowTest
+[INFO] Running com.byonix.shoplink.service.security.AdminSecurityServiceAuditTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.669 s -- in com.byonix.shoplink.service.security.AdminSecurityServiceAuditTest
+[INFO] Running com.byonix.shoplink.service.security.ProductionAuthFlowTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.022 s -- in com.byonix.shoplink.service.security.ProductionAuthFlowTest
+[INFO] Running com.byonix.shoplink.service.security.ProductionTokenExposureTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.006 s -- in com.byonix.shoplink.service.security.ProductionTokenExposureTest
+[INFO] Running com.byonix.shoplink.service.security.RefreshTokenSecurityServiceTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.332 s -- in com.byonix.shoplink.service.security.RefreshTokenSecurityServiceTest
+[INFO] Running com.byonix.shoplink.service.security.SecureLoginServiceTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.051 s -- in com.byonix.shoplink.service.security.SecureLoginServiceTest
+[INFO] Running com.byonix.shoplink.service.StoreAcceptingOrdersTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.403 s -- in com.byonix.shoplink.service.StoreAcceptingOrdersTest
+[INFO] Running com.byonix.shoplink.service.StoreServicePublishGateTest
+[INFO] Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.090 s -- in com.byonix.shoplink.service.StoreServicePublishGateTest
+[INFO] Running com.byonix.shoplink.service.StoreThemeContentServiceTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.428 s -- in com.byonix.shoplink.service.StoreThemeContentServiceTest
+[INFO] Running com.byonix.shoplink.StorePublishLifecycleIT
+2026-09-25T23:34:13.877+03:00  INFO 31420 --- [shoplink-backend] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.byonix.shoplink.StorePublishLifecycleIT]: StorePublishLifecycleIT does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-25T23:34:13.879+03:00  INFO 31420 --- [shoplink-backend] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.byonix.shoplink.ShoplinkBackendApplication for test class com.byonix.shoplink.StorePublishLifecycleIT
+2026-09-25T23:34:13.889+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-25T23:34:13.890+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-25T23:34:13.895+03:00  INFO 31420 --- [shoplink-backend] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 5 ms
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.118 s -- in com.byonix.shoplink.StorePublishLifecycleIT
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 229, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  01:24 min
+[INFO] Finished at: 2026-09-25T23:34:14+03:00
+[INFO] ------------------------------------------------------------------------

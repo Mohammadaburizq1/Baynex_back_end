@@ -80,7 +80,7 @@ public class CustomerAuthService {
                 outcome.extraVerificationRequired(), RefreshSessionScope.CUSTOMER);
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = com.byonix.shoplink.security.login.GenericAuthException.class)
     public AuthDtos.AuthResponse refresh(AuthDtos.RefreshRequest request, HttpServletRequest http,
                                          HttpServletResponse response) {
         return authService.refresh(request, http, response, RefreshSessionScope.CUSTOMER);

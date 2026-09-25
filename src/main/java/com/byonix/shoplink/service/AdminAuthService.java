@@ -56,7 +56,7 @@ public class AdminAuthService {
         return authService.issue(user, http, response, 0, false, RefreshSessionScope.ADMIN);
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = com.byonix.shoplink.security.login.GenericAuthException.class)
     public AuthDtos.AuthResponse adminRefresh(AuthDtos.RefreshRequest request, HttpServletRequest http,
                                               HttpServletResponse response) {
         ClientRequestContext ctx = ClientRequestContext.from(http);

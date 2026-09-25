@@ -35,6 +35,9 @@ public class LocalDiskMediaStorage implements MediaStorage {
     public String save(UUID storeId, ImageType type, byte[] content) throws IOException {
         Path dir = root.resolve(storeId.toString());
         Files.createDirectories(dir);
+        if (Files.isSymbolicLink(dir) || !dir.toRealPath().startsWith(root.toRealPath())) {
+            throw new IOException("Media directory is outside storage root");
+        }
         String name = UUID.randomUUID() + "." + type.extension();
         // CREATE_NEW: never overwrite an existing file, even in the (practically impossible) event of a name clash.
         Files.write(dir.resolve(name), content, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
@@ -47,9 +50,12 @@ public class LocalDiskMediaStorage implements MediaStorage {
             return Optional.empty();
         }
         Path file = root.resolve(storeId.toString()).resolve(fileName).normalize();
-        if (!file.startsWith(root) || !Files.isRegularFile(file)) {
+        if (!file.startsWith(root) || !Files.isRegularFile(file, java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
             return Optional.empty();
         }
+        try {
+            if (Files.isSymbolicLink(file.getParent()) || !file.toRealPath().startsWith(root.toRealPath())) return Optional.empty();
+        } catch (IOException ex) { return Optional.empty(); }
         return Optional.of(new FileSystemResource(file));
     }
 }

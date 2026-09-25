@@ -25,11 +25,11 @@ public class EmailNotificationService {
         return mailProperties.isEnabled() && mailSender != null;
     }
 
-    public void sendPasswordResetEmail(String toEmail, String rawToken) {
-        sendPasswordResetEmail(toEmail, rawToken, mailProperties.getPasswordResetPath());
+    public DeliveryResult sendPasswordResetEmail(String toEmail, String rawToken) {
+        return sendPasswordResetEmail(toEmail, rawToken, mailProperties.getPasswordResetPath());
     }
 
-    public void sendPasswordResetEmail(String toEmail, String rawToken, String resetPath) {
+    public DeliveryResult sendPasswordResetEmail(String toEmail, String rawToken, String resetPath) {
         String link = buildLink(resetPath, rawToken);
         String subject = "Reset your khanGates password";
         String text = """
@@ -46,10 +46,10 @@ public class EmailNotificationService {
                 <p>Or copy this link:<br/><code>%s</code></p>
                 <p>If you did not request this, you can ignore this email.</p>
                 """.formatted(link, link);
-        send(toEmail, subject, text, html);
+        return send(toEmail, subject, text, html);
     }
 
-    public void sendEmailVerification(String toEmail, String rawToken) {
+    public DeliveryResult sendEmailVerification(String toEmail, String rawToken) {
         String link = buildLink(mailProperties.getVerifyEmailPath(), rawToken);
         String subject = "Verify your khanGates email";
         String text = """
@@ -65,10 +65,10 @@ public class EmailNotificationService {
                 <p><a href="%s">Verify your email</a></p>
                 <p>Or copy this link:<br/><code>%s</code></p>
                 """.formatted(link, link);
-        send(toEmail, subject, text, html);
+        return send(toEmail, subject, text, html);
     }
 
-    public void sendStaffInvite(String toEmail, String storeName, String rawToken) {
+    public DeliveryResult sendStaffInvite(String toEmail, String storeName, String rawToken) {
         String link = buildLink(mailProperties.getStaffInvitePath(), rawToken);
         String subject = "You've been invited to join " + storeName + " on khanGates";
         String text = """
@@ -84,8 +84,8 @@ public class EmailNotificationService {
                 <p><a href="%s">Accept the invite</a></p>
                 <p>Or copy this link:<br/><code>%s</code></p>
                 <p>If you weren't expecting this, you can ignore this email.</p>
-                """.formatted(storeName, link, link);
-        send(toEmail, subject, text, html);
+                """.formatted(org.springframework.web.util.HtmlUtils.htmlEscape(storeName), link, link);
+        return send(toEmail, subject, text, html);
     }
 
     private String buildLink(String path, String rawToken) {
@@ -95,22 +95,35 @@ public class EmailNotificationService {
         return base + normalizedPath + "?token=" + encoded;
     }
 
-    private void send(String toEmail, String subject, String text, String html) {
+    public enum DeliveryResult { ACCEPTED_BY_SMTP, DISABLED, FAILED }
+
+    private DeliveryResult send(String toEmail, String subject, String text, String html) {
         if (!isConfigured()) {
-            log.debug("Mail disabled or JavaMailSender not configured; skipped email to {}", toEmail);
-            return;
+            log.info("Transactional email skipped: delivery disabled or unconfigured");
+            return DeliveryResult.DISABLED;
         }
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
-            helper.setFrom(mailProperties.getFrom(), mailProperties.getFromName());
-            helper.setTo(toEmail);
-            helper.setSubject(subject);
-            helper.setText(text, html);
-            mailSender.send(message);
-            log.info("Sent email '{}' to {}", subject, toEmail);
-        } catch (Exception e) {
-            log.error("Failed to send email '{}' to {}", subject, toEmail, e);
+        for (int attempt = 1; attempt <= 3; attempt++) {
+            try {
+                MimeMessage message = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
+                helper.setFrom(mailProperties.getFrom(), mailProperties.getFromName());
+                helper.setTo(toEmail);
+                helper.setSubject(subject);
+                helper.setText(text, html);
+                mailSender.send(message);
+                log.info("Transactional email accepted by SMTP");
+                return DeliveryResult.ACCEPTED_BY_SMTP;
+            } catch (org.springframework.mail.MailAuthenticationException ex) {
+                log.error("Transactional email failed: SMTP authentication");
+                return DeliveryResult.FAILED;
+            } catch (Exception ex) {
+                log.warn("Transactional email attempt={} failed type={}", attempt, ex.getClass().getSimpleName());
+                if (attempt < 3) {
+                    try { Thread.sleep(100L * attempt); }
+                    catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); return DeliveryResult.FAILED; }
+                }
+            }
         }
+        return DeliveryResult.FAILED;
     }
 }

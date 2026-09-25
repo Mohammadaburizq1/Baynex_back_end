@@ -41,6 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @WebAppConfiguration
 @ActiveProfiles("test")
+@org.springframework.test.context.ContextConfiguration(initializers = com.byonix.shoplink.support.PostgresTestDatabase.class)
 @Transactional
 class StorePublishLifecycleIT {
     @Autowired WebApplicationContext webApplicationContext;

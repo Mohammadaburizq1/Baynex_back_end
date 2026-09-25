@@ -2,18 +2,49 @@ spring:
   config:
     activate:
       on-profile: prod
+  mvc:
+    log-request-details: false
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: WARN
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.orm.jdbc.bind: OFF
 
 app:
   auth:
     expose-tokens-in-response: false
     refresh-token-delivery: COOKIE
+    refresh-cookie-secure: true
+    refresh-cookie-same-site: Strict
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
+    allowed-origin-patterns: ""
+  media:
+    storage-dir: ${MEDIA_STORAGE_DIR}
+    public-base-url: ${MEDIA_PUBLIC_BASE_URL}
+    persistent-storage: ${MEDIA_PERSISTENT_STORAGE:false}
+  mail:
+    enabled: ${MAIL_ENABLED:false}
+    disabled-acknowledged: ${MAIL_DISABLED_ACKNOWLEDGED:false}
+    frontend-base-url: ${FRONTEND_BASE_URL}
   swagger:
     enabled: false
   security:
+    rate-limit:
+      backend: memory
+      single-instance: ${RATE_LIMIT_SINGLE_INSTANCE:false}
     hsts:
       enabled: true
       max-age-seconds: 31536000
       include-subdomains: true
-      preload: true
+      preload: false
   jwt:
+    secret: ${JWT_SECRET}
     admin-refresh-expiration-days: 1

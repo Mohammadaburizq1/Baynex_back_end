@@ -40,7 +40,8 @@ public class SecureLoginService {
 
     public record LoginOutcome(User user, int riskScore, boolean extraVerificationRequired) {}
 
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW,
+            noRollbackFor = GenericAuthException.class)
     public LoginOutcome authenticate(String email, String password, ClientRequestContext ctx, LoginPortal portal) {
         rateLimitService.checkLoginByIp(ctx.ipAddress());
         rateLimitService.checkLoginByEmail(email);
@@ -139,7 +140,8 @@ public class SecureLoginService {
         return new LoginOutcome(user, risk, extraVerification);
     }
 
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW,
+            noRollbackFor = GenericAuthException.class)
     public LoginOutcome authenticateByPhone(String phone, String password, ClientRequestContext ctx, LoginPortal portal) {
         rateLimitService.checkLoginByIp(ctx.ipAddress());
         rateLimitService.checkLoginByEmail(phone);

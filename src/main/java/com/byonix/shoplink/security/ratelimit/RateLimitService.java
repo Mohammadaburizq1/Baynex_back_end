@@ -86,6 +86,11 @@ public class RateLimitService {
         checkOrThrow("order-lookup-ip", ip, 20, 300);
     }
 
+    public void checkPublicOrderLookupByCode(String slug, String code) {
+        checkOrThrow("order-lookup-code", slug.toLowerCase(java.util.Locale.ROOT) + "|"
+                + code.trim().toUpperCase(java.util.Locale.ROOT), 10, 300);
+    }
+
     public void checkVerifyPhoneByIp(String ip) {
         checkOrThrow("verify-phone-ip", ip, 10, 300);
     }

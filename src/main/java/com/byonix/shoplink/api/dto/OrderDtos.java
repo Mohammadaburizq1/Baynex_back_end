@@ -60,6 +60,14 @@ public final class OrderDtos {
             @Email @Size(max = 255) String email,
             @Pattern(regexp = "^\\+?[0-9\\s\\-()]{7,40}$", message = "Invalid phone number") String phone) {}
 
+    public record TrackingResponse(String orderCode, OrderStatus status, DeliveryMethod deliveryMethod,
+                                   BigDecimal total, String currency, Instant createdAt) {
+        public static TrackingResponse from(OrderResponse order) {
+            return new TrackingResponse(order.orderCode(), order.status(), order.deliveryMethod(),
+                    order.total(), order.currency(), order.createdAt());
+        }
+    }
+
     public record OrderResponse(UUID id, UUID storeId, String orderCode, String customerName, String customerEmail,
                                 String customerPhone, String customerAddress, DeliveryMethod deliveryMethod,
                                 PaymentMethod paymentMethod, PaymentStatus paymentStatus, OrderStatus status,

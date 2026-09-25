@@ -10,6 +10,17 @@ import static org.mockito.Mockito.mock;
 
 class RateLimitFilterTest {
     @Test
+    void forgedForwardedHeadersCannotResetLoginBudget() throws Exception {
+        RateLimitFilter filter = new RateLimitFilter();
+        for (int i = 0; i < 11; i++) {
+            var request = loginRequest("203.0.113.99");
+            request.addHeader("X-Forwarded-For", "10.0.0." + i);
+            var response = new MockHttpServletResponse();
+            filter.doFilter(request, response, mock(FilterChain.class));
+            assertEquals(i < 10 ? 200 : 429, response.getStatus());
+        }
+    }
+    @Test
     void customerLoginPathIsRateLimitedAfterTenRequests() throws Exception {
         RateLimitFilter filter = new RateLimitFilter();
         FilterChain chain = mock(FilterChain.class);

@@ -21,8 +21,8 @@ public record ClientRequestContext(
     }
 
     private static String clientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        return forwarded == null || forwarded.isBlank() ? request.getRemoteAddr() : forwarded.split(",")[0].trim();
+        // Only the container's trusted-proxy configuration may resolve forwarded addresses.
+        return request.getRemoteAddr();
     }
 
     private static String blankToNull(String value) {

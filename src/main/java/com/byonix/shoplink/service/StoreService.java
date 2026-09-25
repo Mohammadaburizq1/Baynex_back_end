@@ -16,12 +16,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Currency;
+import java.time.ZoneId;
+import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class StoreService {
+    private static final String DEFAULT_CURRENCY = "JOD";
+    private static final String DEFAULT_TIMEZONE = "UTC";
+    private static final String DEFAULT_LOCALE = "en";
+    private static final Set<String> SUPPORTED_LOCALES = Set.of("en", "ar");
     private final StoreRepository storeRepository;
     private final StoreCreationIdempotencyKeyRepository idempotencyKeyRepository;
     private final ProductRepository productRepository;
@@ -86,6 +94,13 @@ public class StoreService {
             }
             store.setStatus(request.status());
         }
+        return mapper.store(store);
+    }
+
+    @Transactional
+    public StoreDtos.StoreResponse updateAcceptingOrders(UUID id, boolean acceptingOrders) {
+        Store store = ownedStore(id);
+        store.setAcceptingOrders(acceptingOrders);
         return mapper.store(store);
     }
 
@@ -162,6 +177,55 @@ public class StoreService {
         if (r.pickupAvailable() != null) {
             s.setPickupAvailable(r.pickupAvailable());
         }
+        if (r.currency() != null) {
+            s.setCurrency(validateCurrency(r.currency()));
+        } else if (s.getCurrency() == null) {
+            s.setCurrency(DEFAULT_CURRENCY);
+        }
+        if (r.timezone() != null) {
+            s.setTimezone(validateTimezone(r.timezone()));
+        } else if (s.getTimezone() == null) {
+            s.setTimezone(DEFAULT_TIMEZONE);
+        }
+        if (r.locale() != null) {
+            s.setLocale(validateLocale(r.locale()));
+        } else if (s.getLocale() == null) {
+            s.setLocale(DEFAULT_LOCALE);
+        }
+    }
+
+    private String validateCurrency(String value) {
+        String code = value.trim().toUpperCase(Locale.ROOT);
+        if (!code.matches("[A-Z]{3}")) {
+            throw new IllegalArgumentException("Currency must be a valid ISO 4217 code");
+        }
+        try {
+            Currency.getInstance(code);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("Currency must be a valid ISO 4217 code", ex);
+        }
+        return code;
+    }
+
+    private String validateTimezone(String value) {
+        String timezone = value.trim();
+        try {
+            ZoneId.of(timezone);
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Timezone must be a valid IANA timezone", ex);
+        }
+        if (!ZoneId.getAvailableZoneIds().contains(timezone)) {
+            throw new IllegalArgumentException("Timezone must be a valid IANA timezone");
+        }
+        return timezone;
+    }
+
+    private String validateLocale(String value) {
+        String locale = value.trim().toLowerCase(Locale.ROOT);
+        if (!SUPPORTED_LOCALES.contains(locale)) {
+            throw new IllegalArgumentException("Locale must be one of: en, ar");
+        }
+        return locale;
     }
 
     private String blank(String v) {

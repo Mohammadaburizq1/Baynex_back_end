@@ -1,0 +1,2 @@
+ALTER TABLE stores
+    ADD COLUMN accepting_orders BOOLEAN NOT NULL DEFAULT TRUE;

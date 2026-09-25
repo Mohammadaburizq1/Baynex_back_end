@@ -19,17 +19,23 @@ public class MapperService {
                 s.getLogoUrl(), s.getCoverImageUrl(), s.getPhone(), s.getWhatsappNumber(), s.getEmail(), s.getAddress(),
                 s.getCity(), s.getCountry(), s.getLatitude(), s.getLongitude(), s.getPrimaryColor(), s.getSecondaryColor(),
                 s.getCategorySlug(), s.getSubCategorySlug(), effectiveTemplateKey(s), s.getStatus(), s.getCreatedAt(), s.getUpdatedAt(),
-                s.getFreeDeliveryThreshold(), s.getDefaultEstimatedTime(), s.isPickupAvailable());
+                s.getFreeDeliveryThreshold(), s.getDefaultEstimatedTime(), s.isPickupAvailable(),
+                s.getCurrency(), s.getTimezone(), s.getLocale(), s.isAcceptingOrders());
     }
 
+    // The template the merchant chose wins. Onboarding sends both a template key (e.g. "ramen-shop")
+    // and a coarse sub-category ("fast-food"); returning the sub-category here made every such
+    // restaurant/café storefront render the generic default template. Legacy restaurant rows
+    // (V12 set template_key = sub_category_slug) resolve exactly as before.
     public String effectiveTemplateKey(Store s) {
+        if (s.getTemplateKey() != null && !s.getTemplateKey().isBlank()) {
+            return s.getTemplateKey();
+        }
         if ("restaurants-cafes".equals(s.getCategorySlug())) {
             if (s.getSubCategorySlug() != null && !s.getSubCategorySlug().isBlank()) {
                 return s.getSubCategorySlug().trim();
             }
-            if (s.getTemplateKey() == null || s.getTemplateKey().isBlank()) {
-                return "restaurant-default";
-            }
+            return "restaurant-default";
         }
         return s.getTemplateKey();
     }
@@ -40,34 +46,24 @@ public class MapperService {
                 c.getDescription(), c.getIcon(), c.getImageUrl(), c.getSortOrder(), c.isActive(), c.getCategoryType());
     }
 
-    public ProductDtos.ProductResponse product(Product p) {
-        return new ProductDtos.ProductResponse(p.getId(), p.getStore().getId(), p.getCategory() == null ? null : p.getCategory().getId(),
-                p.getNameEn(), p.getNameAr(), p.getSlug(), p.getDescription(), p.getPrice(), p.getSalePrice(), p.getCurrency(),
-                p.getImageUrl(), p.getGalleryJson(), p.getSku(), p.getProductType(), p.isAvailable(), p.isFeatured(), p.getSortOrder(),
-                p.getStock());
-    }
-
-    // Customer-facing storefront responses never include real inventory counts — stock is a
-    // merchant-only concern (dashboard/Inventory page). Same fields as product() otherwise.
-    public ProductDtos.ProductResponse publicProduct(Product p) {
-        ProductDtos.ProductResponse full = product(p);
-        return new ProductDtos.ProductResponse(full.id(), full.storeId(), full.categoryId(), full.nameEn(), full.nameAr(),
-                full.slug(), full.description(), full.price(), full.salePrice(), full.currency(), full.imageUrl(),
-                full.galleryJson(), full.sku(), full.productType(), full.available(), full.featured(), full.sortOrder(),
-                null);
-    }
+    // Product responses (options, variants, derived price/stock) are built by ProductAssembler,
+    // which loads a whole page of products' relations at once instead of one query per product.
 
     public OrderDtos.OrderResponse order(CustomerOrder o) {
         return new OrderDtos.OrderResponse(o.getId(), o.getStore().getId(), o.getOrderCode(), o.getCustomerName(),
                 o.getCustomerEmail(), o.getCustomerPhone(), o.getCustomerAddress(), o.getDeliveryMethod(),
-                o.getPaymentMethod(), o.getStatus(), o.getSubtotal(), o.getDeliveryFee(), o.getDiscount(),
+                o.getPaymentMethod(), o.getPaymentStatus(), o.getStatus(), o.getSubtotal(), o.getDeliveryFee(), o.getDiscount(),
                 o.getOffer() == null ? null : o.getOffer().getCode(), o.getTotal(),
-                o.getNotes(), o.getCreatedAt(), o.getItems().stream().map(this::orderItem).toList());
+                o.getNotes(), o.getCreatedAt(), o.getItems().stream().map(this::orderItem).toList(), o.getCurrency());
     }
 
     public OrderDtos.OrderItemResponse orderItem(OrderItem i) {
         return new OrderDtos.OrderItemResponse(i.getId(), i.getProduct() == null ? null : i.getProduct().getId(),
-                i.getProductNameSnapshot(), i.getUnitPrice(), i.getQuantity(), i.getTotal());
+                i.getProductNameSnapshot(), i.getUnitPrice(), i.getQuantity(), i.getTotal(),
+                i.getVariant() == null ? null : i.getVariant().getId(), i.getVariantLabel(), i.getSkuSnapshot(),
+                i.getModifiers().stream()
+                        .map(m -> new OrderDtos.OrderModifierResponse(m.getGroupName(), m.getOptionName(), m.getPriceDelta()))
+                        .toList());
     }
 
     public OfferDtos.OfferResponse offer(Offer o) {

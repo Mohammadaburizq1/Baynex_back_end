@@ -22,13 +22,36 @@ public final class OrderDtos {
             @NotNull DeliveryMethod deliveryMethod,
             @NotNull PaymentMethod paymentMethod,
             @PositiveOrZero BigDecimal deliveryFee,
+            UUID deliveryZoneId,
             @Size(max = 40) String discountCode,
             @Size(max = 1000) String notes,
-            @NotEmpty List<@Valid CreateOrderItemRequest> items) {}
+            @NotEmpty List<@Valid CreateOrderItemRequest> items) {
+        public CreateOrderRequest(String customerName, String customerEmail, String customerPhone, String customerAddress,
+                                  DeliveryMethod deliveryMethod, PaymentMethod paymentMethod, BigDecimal deliveryFee,
+                                  String discountCode, String notes, List<CreateOrderItemRequest> items) {
+            this(customerName, customerEmail, customerPhone, customerAddress, deliveryMethod, paymentMethod,
+                    deliveryFee, null, discountCode, notes, items);
+        }
+    }
 
-    public record CreateOrderItemRequest(@NotNull UUID productId, @Min(1) int quantity) {}
+    /**
+     * variantId is required for a product that has variants and rejected for one that doesn't.
+     * modifierOptionIds are the add-ons chosen (each must belong to this product; group min/max
+     * rules apply) — null or empty when none.
+     */
+    public record CreateOrderItemRequest(@NotNull UUID productId, @Min(1) int quantity, UUID variantId,
+                                         @Size(max = 30) List<@NotNull UUID> modifierOptionIds) {}
     public record StatusUpdateRequest(@NotNull OrderStatus status) {}
-    public record OrderItemResponse(UUID id, UUID productId, String productNameSnapshot, BigDecimal unitPrice, int quantity, BigDecimal total) {}
+    public record PaymentStatusUpdateRequest(@NotNull PaymentStatus status) {}
+    /** An add-on as it was when bought — plain text and a number, unaffected by later catalogue edits. */
+    public record OrderModifierResponse(String groupName, String optionName, BigDecimal priceDelta) {}
+    /**
+     * variantLabel/sku/modifiers are what was sold, copied at purchase time — they stay true if the
+     * variant or add-on is later edited or deleted. unitPrice already includes the add-on deltas.
+     */
+    public record OrderItemResponse(UUID id, UUID productId, String productNameSnapshot, BigDecimal unitPrice, int quantity,
+                                    BigDecimal total, UUID variantId, String variantLabel, String sku,
+                                    List<OrderModifierResponse> modifiers) {}
 
     @ValidOrderLookup
     @Schema(description = "Requires orderCode plus exactly one of: email or phone (not both, not email alone).")
@@ -39,7 +62,8 @@ public final class OrderDtos {
 
     public record OrderResponse(UUID id, UUID storeId, String orderCode, String customerName, String customerEmail,
                                 String customerPhone, String customerAddress, DeliveryMethod deliveryMethod,
-                                PaymentMethod paymentMethod, OrderStatus status, BigDecimal subtotal, BigDecimal deliveryFee,
+                                PaymentMethod paymentMethod, PaymentStatus paymentStatus, OrderStatus status,
+                                BigDecimal subtotal, BigDecimal deliveryFee,
                                 BigDecimal discount, String discountCode, BigDecimal total, String notes, Instant createdAt,
-                                List<OrderItemResponse> items) {}
+                                List<OrderItemResponse> items, String currency) {}
 }

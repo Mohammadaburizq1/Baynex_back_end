@@ -12,4 +12,7 @@ public final class AnalyticsDtos {
     // productId/categoryName are null for a line item whose product was since deleted — see
     // OrderRepository.queryTopProducts.
     public record TopProductRow(UUID productId, String name, String categoryName, long unitsSold, BigDecimal revenue) {}
+
+    /** A generated attachment; filename is built from validated dates only, never user input. */
+    public record CsvFile(String filename, byte[] content) {}
 }

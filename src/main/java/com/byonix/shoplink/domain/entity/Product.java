@@ -50,6 +50,14 @@ public class Product extends BaseAuditable {
     // merchant hasn't set a quantity for yet also reads as "not tracked", not a false zero).
     @Column
     private Integer stock;
+    // True once the product is sold through ProductVariants. From then on price/stock/sku live on
+    // the variants; this row's own price is kept only as a fallback and its stock is ignored (the
+    // mapper derives both from the variants when it renders the product).
+    @Column(name = "has_variants", nullable = false)
+    private boolean hasVariants = false;
+    // Null = use the store-wide default (app.inventory.default-low-stock-threshold).
+    @Column(name = "low_stock_threshold")
+    private Integer lowStockThreshold;
     @Enumerated(EnumType.STRING)
     @Column(name = "product_type", nullable = false, length = 30)
     private ProductType productType = ProductType.PRODUCT;

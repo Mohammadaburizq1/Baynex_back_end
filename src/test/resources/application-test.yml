@@ -34,6 +34,9 @@ spring:
       categorySlugIndexes: "CREATE UNIQUE INDEX ux_categories_store_slug ON categories (store_id, slug);"
 
 app:
+  media:
+    storage-dir: ${java.io.tmpdir}/shoplink-test-media
+    public-base-url: http://localhost:8081
   jwt:
     secret: test-secret-key-at-least-32-characters-long!!
   security:

@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import java.math.BigDecimal;
 
 public final class DeliveryDtos {
     private DeliveryDtos() {}
@@ -26,4 +27,8 @@ public final class DeliveryDtos {
             UUID id, UUID storeId, String name, List<String> areas,
             BigDecimal minOrder, BigDecimal deliveryFee, String estimatedTime,
             boolean isActive, int sortOrder) {}
+
+    public record PublicFulfillmentResponse(
+            boolean deliveryAvailable, boolean pickupAvailable,
+            BigDecimal freeDeliveryThreshold, List<DeliveryZoneResponse> zones) {}
 }

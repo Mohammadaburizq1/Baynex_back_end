@@ -14,4 +14,6 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
     List<Category> findByStore_IdOrderBySortOrderAscNameEnAsc(UUID storeId);
     List<Category> findByStore_SlugAndActiveTrueOrderBySortOrderAscNameEnAsc(String storeSlug);
     Optional<Category> findByIdAndStore_Id(UUID id, UUID storeId);
+    boolean existsByStore_IdAndSlug(UUID storeId, String slug);
+    boolean existsByStore_IdAndSlugAndIdNot(UUID storeId, String slug, UUID id);
 }

@@ -15,7 +15,7 @@ public class MailProperties {
      */
     private boolean enabled;
 
-    private String from = "noreply@shoplink.app";
+    private String from = "noreply@khanGates.app";
 
     private String fromName = "khanGates";
 

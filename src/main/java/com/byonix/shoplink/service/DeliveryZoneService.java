@@ -30,6 +30,14 @@ public class DeliveryZoneService {
                 .map(mapper::deliveryZone).toList();
     }
 
+    public DeliveryDtos.PublicFulfillmentResponse publicFulfillment(String slug) {
+        Store store = storeService.publicStore(slug);
+        List<DeliveryDtos.DeliveryZoneResponse> zones = deliveryZoneRepository.findByStore_IdOrderBySortOrderAsc(store.getId())
+                .stream().filter(DeliveryZone::isActive).map(mapper::deliveryZone).toList();
+        return new DeliveryDtos.PublicFulfillmentResponse(!zones.isEmpty(), store.isPickupAvailable(),
+                store.getFreeDeliveryThreshold(), zones);
+    }
+
     @Transactional
     public DeliveryDtos.DeliveryZoneResponse create(DeliveryDtos.DeliveryZoneRequest r) {
         Store store = storeService.accessibleStore(r.storeId());

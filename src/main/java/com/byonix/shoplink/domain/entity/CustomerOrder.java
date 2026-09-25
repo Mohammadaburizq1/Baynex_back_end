@@ -3,6 +3,7 @@ package com.byonix.shoplink.domain.entity;
 import com.byonix.shoplink.domain.enums.DeliveryMethod;
 import com.byonix.shoplink.domain.enums.OrderStatus;
 import com.byonix.shoplink.domain.enums.PaymentMethod;
+import com.byonix.shoplink.domain.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -52,6 +53,10 @@ public class CustomerOrder extends BaseAuditable {
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", nullable = false, length = 30)
     private PaymentMethod paymentMethod;
+    // Independent of paymentMethod (intent) and status (fulfillment) — see PaymentStatus.
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_status", nullable = false, length = 30)
+    private PaymentStatus paymentStatus = PaymentStatus.UNPAID;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private OrderStatus status = OrderStatus.NEW;
@@ -64,6 +69,8 @@ public class CustomerOrder extends BaseAuditable {
     private BigDecimal discount = BigDecimal.ZERO;
     @Column(nullable = false, precision = 12, scale = 3)
     private BigDecimal total = BigDecimal.ZERO;
+    @Column(length = 3)
+    private String currency;
     @Column(length = 1000)
     private String notes;
 

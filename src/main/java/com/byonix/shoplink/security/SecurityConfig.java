@@ -73,8 +73,11 @@ public class SecurityConfig {
                                 "/api/admin/auth/forgot-password",
                                 "/api/admin/auth/reset-password")
                         .permitAll()
-                        .requestMatchers("/api/public/auth/me").hasRole("CUSTOMER")
-                        .requestMatchers(HttpMethod.POST, "/api/public/stores/*/orders").hasRole("CUSTOMER")
+                        .requestMatchers("/api/public/auth/me", "/api/public/customers/**").hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.POST, "/api/public/stores/*/orders").permitAll()
+                        // Uploaded catalogue pictures are shown on public storefronts.
+                        .requestMatchers(HttpMethod.GET, "/media/**").permitAll()
+                        .requestMatchers(HttpMethod.HEAD, "/media/**").permitAll()
                         .requestMatchers("/api/admin/**").hasAnyRole("SUPER_ADMIN", "SUPPORT_ADMIN", "FINANCE_ADMIN", "READ_ONLY_ADMIN")
                         .requestMatchers("/api/auth/**", "/api/public/**", "/swagger-ui.html", "/swagger-ui/**",
                                 "/v3/api-docs/**", "/actuator/health").permitAll()
@@ -132,7 +135,8 @@ public class SecurityConfig {
         }
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of(HttpHeaders.AUTHORIZATION, HttpHeaders.CONTENT_TYPE, "X-Requested-With", "Idempotency-Key"));
-        config.setExposedHeaders(List.of(HttpHeaders.AUTHORIZATION));
+        // Content-Disposition: lets the dashboard read the report CSV's server-chosen filename.
+        config.setExposedHeaders(List.of(HttpHeaders.AUTHORIZATION, HttpHeaders.CONTENT_DISPOSITION));
         config.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

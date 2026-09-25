@@ -14,6 +14,8 @@ import java.util.UUID;
 public interface OrderRepository extends JpaRepository<CustomerOrder, UUID> {
     List<CustomerOrder> findByStore_IdOrderByCreatedAtDesc(UUID storeId);
     Optional<CustomerOrder> findByIdAndStore_Id(UUID id, UUID storeId);
+    List<CustomerOrder> findByCustomer_Id(UUID customerId, org.springframework.data.domain.Pageable pageable);
+    Optional<CustomerOrder> findByIdAndCustomer_Id(UUID id, UUID customerId);
     Optional<CustomerOrder> findByStore_SlugAndOrderCodeIgnoreCaseAndCustomerEmailIgnoreCase(
             String slug, String orderCode, String email);
 
@@ -72,7 +74,7 @@ public interface OrderRepository extends JpaRepository<CustomerOrder, UUID> {
     @Query(value = """
             SELECT
                 oi.product_id AS productId,
-                COALESCE(p.name_en, oi.product_name_snapshot) AS name,
+                oi.product_name_snapshot AS name,
                 c.name_en AS categoryName,
                 SUM(oi.quantity) AS unitsSold,
                 SUM(oi.total) AS revenue
@@ -84,10 +86,26 @@ public interface OrderRepository extends JpaRepository<CustomerOrder, UUID> {
               AND o.status <> 'CANCELLED'
               AND o.created_at >= :from
               AND o.created_at < :toExclusive
-            GROUP BY oi.product_id, COALESCE(p.name_en, oi.product_name_snapshot), c.name_en
-            ORDER BY SUM(oi.total) DESC
+            GROUP BY oi.product_id, oi.product_name_snapshot, c.name_en
+            ORDER BY SUM(oi.total) DESC, oi.product_name_snapshot, oi.product_id
             """, nativeQuery = true)
     List<TopProductProjection> queryTopProducts(@Param("storeId") UUID storeId,
                                                  @Param("from") Instant from,
-                                                 @Param("toExclusive") Instant toExclusive);
+                                                 @Param("toExclusive") Instant toExclusive,
+                                                 org.springframework.data.domain.Pageable pageable);
+
+    @Query("""
+            select o.orderCode as orderCode, o.createdAt as createdAt, o.status as status,
+                   o.deliveryMethod as deliveryMethod, o.customerName as customerName,
+                   o.subtotal as subtotal, o.discount as discount, o.deliveryFee as deliveryFee,
+                   o.total as total, o.currency as currency
+            from CustomerOrder o
+            where o.store.id = :storeId and o.status <> com.byonix.shoplink.domain.enums.OrderStatus.CANCELLED
+              and o.createdAt >= :from and o.createdAt < :toExclusive
+            order by o.createdAt desc, o.id desc
+            """)
+    List<OrderExportProjection> queryReportOrders(@Param("storeId") UUID storeId,
+                                                @Param("from") Instant from,
+                                                @Param("toExclusive") Instant toExclusive,
+                                                org.springframework.data.domain.Pageable pageable);
 }

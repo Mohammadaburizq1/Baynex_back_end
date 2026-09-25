@@ -35,6 +35,10 @@ spring:
             WHERE email IS NOT NULL;
   jackson:
     default-property-inclusion: non_null
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
   mail:
     host: ${MAIL_HOST:}
     port: ${MAIL_PORT:587}
@@ -102,12 +106,21 @@ app:
     enabled: ${SWAGGER_ENABLED:true}
   mail:
     enabled: ${MAIL_ENABLED:false}
-    from: ${MAIL_FROM:noreply@shoplink.app}
+    from: ${MAIL_FROM:noreply@khanGates.app}
     from-name: ${MAIL_FROM_NAME:khanGates}
     frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:8080}
     password-reset-path: ${MAIL_PASSWORD_RESET_PATH:/reset-password}
     verify-email-path: ${MAIL_VERIFY_EMAIL_PATH:/verify-email}
     admin-password-reset-path: ${MAIL_ADMIN_PASSWORD_RESET_PATH:/admin/reset-password}
+  media:
+    # Uploaded catalogue pictures. Mount a persistent volume here in production (see docker-compose).
+    storage-dir: ${MEDIA_STORAGE_DIR:./data/media}
+    # Origin the uploaded files are publicly reachable at; URLs handed to the frontend are built from it.
+    public-base-url: ${MEDIA_PUBLIC_BASE_URL:http://localhost:8081}
+  inventory:
+    # A tracked item counts as "low stock" at or below this many units, unless the product/variant
+    # sets its own threshold.
+    default-low-stock-threshold: ${INVENTORY_DEFAULT_LOW_STOCK_THRESHOLD:5}
 
 springdoc:
   api-docs:

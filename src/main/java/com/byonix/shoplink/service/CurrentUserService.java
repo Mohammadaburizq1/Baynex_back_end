@@ -31,6 +31,20 @@ public class CurrentUserService {
         return principal.user();
     }
 
+    /** The authenticated user, or null for an anonymous request (e.g. guest checkout). */
+    public User userOrNull() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getPrincipal() instanceof AppUserDetails principal ? principal.user() : null;
+    }
+
+    /** Returns the authenticated customer only; anonymous and non-customer principals are guests. */
+    public User customerOrNull() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !(auth.getPrincipal() instanceof AppUserDetails principal)) return null;
+        User user = principal.user();
+        return user.getRole() == Role.CUSTOMER ? user : null;
+    }
+
     public boolean isSuperAdmin() {
         return user().getRole() == Role.SUPER_ADMIN;
     }

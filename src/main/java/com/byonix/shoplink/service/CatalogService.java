@@ -1,11 +1,13 @@
 package com.byonix.shoplink.service;
 
 import com.byonix.shoplink.api.dto.*;
+import com.byonix.shoplink.common.ConflictException;
 import com.byonix.shoplink.domain.entity.Category;
 import com.byonix.shoplink.domain.entity.Product;
 import com.byonix.shoplink.domain.entity.Store;
 import com.byonix.shoplink.domain.enums.CategoryType;
 import com.byonix.shoplink.domain.enums.DashboardSection;
+import com.byonix.shoplink.domain.enums.InventoryAdjustmentReason;
 import com.byonix.shoplink.domain.enums.PermissionLevel;
 import com.byonix.shoplink.domain.enums.ProductType;
 import com.byonix.shoplink.repository.*;
@@ -22,12 +24,18 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CatalogService {
+    private static final int MAX_CATEGORY_DEPTH = 50;
+
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
+    private final ProductVariantRepository variantRepository;
     private final StoreTemplateRepository templateRepository;
     private final StoreService storeService;
     private final CurrentUserService currentUser;
     private final MapperService mapper;
+    private final ProductAssembler assembler;
+    private final InventoryLedger ledger;
+    private final ProductImageService imageService;
 
     public List<CategoryDtos.CategoryResponse> businessCategories() {
         return categoryRepository.findByCategoryTypeAndParentIsNullAndActiveTrueOrderBySortOrderAscNameEnAsc(CategoryType.BUSINESS)
@@ -41,18 +49,17 @@ public class CatalogService {
 
     public List<ProductDtos.ProductResponse> publicProducts(String storeSlug) {
         storeService.publicStore(storeSlug);
-        return productRepository.findByStore_SlugAndAvailableTrueOrderBySortOrderAscNameEnAsc(storeSlug).stream().map(mapper::publicProduct).toList();
+        return assembler.storefront(productRepository.findByStore_SlugAndAvailableTrueOrderBySortOrderAscNameEnAsc(storeSlug));
     }
 
     public List<ProductDtos.ProductResponse> publicFeaturedProducts(String storeSlug) {
         storeService.publicStore(storeSlug);
-        return productRepository.findByStore_SlugAndFeaturedTrueAndAvailableTrueOrderBySortOrderAscNameEnAsc(storeSlug)
-                .stream().map(mapper::publicProduct).toList();
+        return assembler.storefront(productRepository.findByStore_SlugAndFeaturedTrueAndAvailableTrueOrderBySortOrderAscNameEnAsc(storeSlug));
     }
 
     public ProductDtos.ProductResponse publicProduct(String storeSlug, String productSlug) {
         storeService.publicStore(storeSlug);
-        return mapper.publicProduct(productRepository.findByStore_SlugAndSlugAndAvailableTrue(storeSlug, productSlug)
+        return assembler.storefront(productRepository.findByStore_SlugAndSlugAndAvailableTrue(storeSlug, productSlug)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found")));
     }
 
@@ -99,7 +106,15 @@ public class CatalogService {
         currentUser.requireMerchantOrAdmin();
         Product p = new Product();
         apply(p, r);
-        return mapper.product(productRepository.save(p));
+        Product saved = productRepository.save(p);
+        imageService.seedFromPrimary(saved);
+        // The opening count is the one stock value a product is created with; from then on the
+        // count only moves through sales and inventory adjustments, each written to the ledger.
+        if (saved.getStock() != null && saved.getStock() > 0) {
+            ledger.record(saved.getStore(), saved, null, saved.getNameEn(), saved.getStock(), saved.getStock(),
+                    InventoryAdjustmentReason.INITIAL, null, null);
+        }
+        return assembler.dashboard(saved);
     }
 
     // storeId is optional — when present, scopes the result to just that store instead of every
@@ -111,19 +126,20 @@ public class CatalogService {
             List<Product> products = storeId != null
                     ? productRepository.findByStore_IdOrderBySortOrderAscNameEnAsc(storeId)
                     : productRepository.findAll();
-            return products.stream().map(mapper::product).toList();
+            return assembler.dashboard(products);
         }
         currentUser.ensureListSectionAccess(DashboardSection.PRODUCTS, PermissionLevel.VIEW);
-        return storeService.myStores().stream()
+        List<Product> products = storeService.myStores().stream()
                 .filter(s -> storeId == null || s.id().equals(storeId))
                 .flatMap(s -> productRepository.findByStore_IdOrderBySortOrderAscNameEnAsc(s.id()).stream())
-                .map(mapper::product).toList();
+                .toList();
+        return assembler.dashboard(products);
     }
 
     public ProductDtos.ProductResponse dashboardProduct(UUID id) {
         Product p = productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product not found"));
         currentUser.ensureSectionAccess(p.getStore(), DashboardSection.PRODUCTS, PermissionLevel.VIEW);
-        return mapper.product(p);
+        return assembler.dashboard(p);
     }
 
     @Transactional
@@ -131,7 +147,7 @@ public class CatalogService {
         Product p = productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product not found"));
         currentUser.ensureSectionAccess(p.getStore(), DashboardSection.PRODUCTS, PermissionLevel.EDIT);
         apply(p, r);
-        return mapper.product(p);
+        return assembler.dashboard(p);
     }
 
     @Transactional
@@ -159,8 +175,15 @@ public class CatalogService {
         }
         if (store != null) {
             currentUser.ensureSectionAccess(store, DashboardSection.PRODUCTS, PermissionLevel.EDIT);
+            // Checked before any field is mutated so the query's auto-flush never writes a
+            // half-applied update.
+            boolean slugTaken = c.getId() == null
+                    ? categoryRepository.existsByStore_IdAndSlug(store.getId(), r.slug())
+                    : categoryRepository.existsByStore_IdAndSlugAndIdNot(store.getId(), r.slug(), c.getId());
+            if (slugTaken) {
+                throw new ConflictException("A category with the URL slug \"" + r.slug() + "\" already exists in your store");
+            }
         }
-        c.setStore(store);
         Category parent = r.parentId() == null ? null : categoryRepository.findById(r.parentId()).orElseThrow(() -> new EntityNotFoundException("Parent category not found"));
         if (parent != null) {
             if (store == null && parent.getStore() != null) {
@@ -169,7 +192,19 @@ public class CatalogService {
             if (store != null && parent.getStore() != null && !parent.getStore().getId().equals(store.getId())) {
                 throw new AccessDeniedException("Invalid parent category");
             }
+            // A category can't sit under itself or anything beneath it — that would detach the whole
+            // branch from the tree (and loop any code walking parents).
+            if (c.getId() != null) {
+                Category ancestor = parent;
+                for (int hops = 0; ancestor != null && hops < MAX_CATEGORY_DEPTH; hops++) {
+                    if (ancestor.getId().equals(c.getId())) {
+                        throw new IllegalArgumentException("A category can't be moved under itself or one of its own subcategories");
+                    }
+                    ancestor = ancestor.getParent();
+                }
+            }
         }
+        c.setStore(store);
         c.setParent(parent);
         c.setNameEn(r.nameEn());
         c.setNameAr(r.nameAr());
@@ -185,6 +220,25 @@ public class CatalogService {
     private void apply(Product p, ProductDtos.ProductRequest r) {
         Store store = storeService.accessibleStore(r.storeId());
         currentUser.ensureSectionAccess(store, DashboardSection.PRODUCTS, PermissionLevel.EDIT);
+        // Uniqueness is checked before any field is mutated, so the queries' auto-flush never
+        // writes a half-applied update.
+        boolean slugTaken = p.getId() == null
+                ? productRepository.existsByStore_IdAndSlug(store.getId(), r.slug())
+                : productRepository.existsByStore_IdAndSlugAndIdNot(store.getId(), r.slug(), p.getId());
+        if (slugTaken) {
+            throw new ConflictException("A product with the URL slug \"" + r.slug() + "\" already exists in your store");
+        }
+        String sku = blank(r.sku());
+        if (sku != null) {
+            // One SKU namespace per store, shared by products and their variants.
+            boolean skuTaken = (p.getId() == null
+                    ? productRepository.existsByStore_IdAndSkuIgnoreCase(store.getId(), sku)
+                    : productRepository.existsByStore_IdAndSkuIgnoreCaseAndIdNot(store.getId(), sku, p.getId()))
+                    || variantRepository.existsByStore_IdAndSkuIgnoreCase(store.getId(), sku);
+            if (skuTaken) {
+                throw new ConflictException("The SKU \"" + sku + "\" is already used by another product in your store");
+            }
+        }
         p.setStore(store);
         if (r.categoryId() != null) {
             Category category = categoryRepository.findById(r.categoryId()).orElseThrow(() -> new EntityNotFoundException("Category not found"));
@@ -201,10 +255,17 @@ public class CatalogService {
         p.setDescription(r.description());
         p.setPrice(r.price());
         p.setSalePrice(r.salePrice());
-        p.setCurrency(r.currency() == null ? "JOD" : r.currency());
-        p.setImageUrl(blank(r.imageUrl()));
+        // The store is the operating-currency authority. Keep an explicit legacy value when
+        // editing/importing an existing product, but new products inherit the store currency.
+        p.setCurrency(r.currency() == null ? store.getCurrency() : r.currency());
+        // imageUrl is taken from the request only when the product is CREATED (it seeds the gallery).
+        // Afterwards the gallery (ProductImageService) owns it: an edit form that does not carry the
+        // image would otherwise wipe it on every save.
+        if (p.getId() == null) {
+            p.setImageUrl(blank(r.imageUrl()));
+        }
         p.setGalleryJson(r.galleryJson());
-        p.setSku(r.sku());
+        p.setSku(sku);
         ProductType type = r.productType() == null ? p.getProductType() : r.productType();
         p.setProductType(type);
         p.setAvailable(r.available() == null || r.available());
@@ -212,7 +273,18 @@ public class CatalogService {
         p.setSortOrder(r.sortOrder());
         // A SERVICE never tracks stock — force it to null regardless of what the client sent,
         // rather than trusting the client to have omitted it.
-        p.setStock(type == ProductType.SERVICE ? null : r.stock());
+        //
+        // Stock is only taken from the request when the product is CREATED (its opening count).
+        // After that the count changes through sales and inventory adjustments only: an edit form
+        // holds the number it loaded, so letting it write the field back would silently undo any
+        // sale made since the page was opened. (A product sold through variants keeps its stock
+        // on the variants and has none of its own.)
+        if (type == ProductType.SERVICE) {
+            p.setStock(null);
+        } else if (p.getId() == null) {
+            p.setStock(r.stock());
+        }
+        p.setLowStockThreshold(r.lowStockThreshold());
     }
 
     private void ensureCategoryAccess(Category c) {

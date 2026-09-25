@@ -6,6 +6,7 @@ import com.byonix.shoplink.domain.entity.Store;
 import com.byonix.shoplink.security.ratelimit.RateLimitService;
 import com.byonix.shoplink.security.request.ClientRequestContext;
 import com.byonix.shoplink.service.*;
+import tools.jackson.databind.JsonNode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -29,6 +30,9 @@ public class PublicController {
     private final StaffService staffService;
     private final OfferService offerService;
     private final AppointmentService appointmentService;
+    private final StoreThemeContentService themeContentService;
+    private final BusinessHoursService businessHoursService;
+    private final DeliveryZoneService deliveryZoneService;
 
     @GetMapping("/categories/business")
     public ApiResponse<List<CategoryDtos.CategoryResponse>> businessCategories() {
@@ -43,6 +47,16 @@ public class PublicController {
     @GetMapping("/stores/{slug}")
     public ApiResponse<StoreDtos.StoreResponse> store(@PathVariable String slug) {
         return ApiResponse.ok(storeService.publicStoreResponse(slug));
+    }
+
+    @GetMapping("/stores/{slug}/business-hours")
+    public ApiResponse<BusinessHoursDtos.Response> businessHours(@PathVariable String slug) {
+        return ApiResponse.ok(businessHoursService.publicHours(slug));
+    }
+
+    @GetMapping("/stores/{slug}/fulfillment")
+    public ApiResponse<DeliveryDtos.PublicFulfillmentResponse> fulfillment(@PathVariable String slug) {
+        return ApiResponse.ok(deliveryZoneService.publicFulfillment(slug));
     }
 
     @GetMapping("/stores/{slug}/homepage")
@@ -80,7 +94,6 @@ public class PublicController {
     }
 
     @PostMapping("/stores/{slug}/orders")
-    @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<OrderDtos.OrderResponse> createOrder(@PathVariable String slug, @Valid @RequestBody OrderDtos.CreateOrderRequest request) {
         return ApiResponse.created(orderService.createPublicOrder(slug, request));
     }
@@ -114,6 +127,11 @@ public class PublicController {
     public ApiResponse<AppointmentDtos.AppointmentResponse> bookAppointment(
             @PathVariable String slug, @Valid @RequestBody AppointmentDtos.CreateAppointmentRequest request) {
         return ApiResponse.created(appointmentService.createPublicAppointment(slug, request));
+    }
+
+    @GetMapping("/stores/{slug}/theme-content")
+    public ApiResponse<JsonNode> themeContent(@PathVariable String slug) {
+        return ApiResponse.ok(themeContentService.getPublished(slug));
     }
 
     @PostMapping("/staff/accept-invite")

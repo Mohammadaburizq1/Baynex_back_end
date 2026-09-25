@@ -21,7 +21,9 @@ public abstract class BaseAuditable {
 
     @PrePersist
     void prePersist() {
-        createdAt = Instant.now();
+        if (createdAt == null) {
+            createdAt = Instant.now();
+        }
         updatedAt = createdAt;
     }
 

@@ -41,7 +41,54 @@ class StoreServicePublishGateTest {
         return new StoreDtos.StoreRequest(
                 "My Store", "my-store", null, null, null, null, null, null, null, null, null,
                 null, null, null, null, "general-store", null, null,
-                status, null, null, null);
+                status, null, null, null, null, null, null);
+    }
+
+    private StoreDtos.StoreRequest requestWithSettings(String currency, String timezone, String locale) {
+        return new StoreDtos.StoreRequest(
+                "My Store", "my-store", null, null, null, null, null, null, null, null, null,
+                null, null, null, null, "general-store", null, null,
+                null, null, null, null, currency, timezone, locale);
+    }
+
+    @Test
+    void createUsesDeterministicSettingsDefaults() {
+        User owner = new User();
+        owner.setId(UUID.randomUUID());
+        when(currentUser.user()).thenReturn(owner);
+        when(storeRepository.existsBySlug("my-store")).thenReturn(false);
+        when(storeRepository.save(any(Store.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        storeService.create(requestWithStatus(null), null);
+
+        ArgumentCaptor<Store> captor = ArgumentCaptor.forClass(Store.class);
+        verify(storeRepository).save(captor.capture());
+        assertEquals("JOD", captor.getValue().getCurrency());
+        assertEquals("UTC", captor.getValue().getTimezone());
+        assertEquals("en", captor.getValue().getLocale());
+    }
+
+    @Test
+    void updatePersistsValidatedStoreSettings() {
+        Store store = ownedDraftStore();
+        when(storeRepository.findById(store.getId())).thenReturn(Optional.of(store));
+        when(currentUser.isSuperAdmin()).thenReturn(true);
+
+        storeService.update(store.getId(), requestWithSettings("usd", "Asia/Amman", "AR"));
+
+        assertEquals("USD", store.getCurrency());
+        assertEquals("Asia/Amman", store.getTimezone());
+        assertEquals("ar", store.getLocale());
+    }
+
+    @Test
+    void invalidStoreSettingsAreRejected() {
+        Store store = ownedDraftStore();
+        when(storeRepository.findById(store.getId())).thenReturn(Optional.of(store));
+        when(currentUser.isSuperAdmin()).thenReturn(true);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> storeService.update(store.getId(), requestWithSettings("ZZZ", "Not/A/Timezone", "fr")));
     }
 
     @Test

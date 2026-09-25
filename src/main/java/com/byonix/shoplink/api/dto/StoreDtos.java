@@ -32,12 +32,18 @@ public final class StoreDtos {
             StoreStatus status,
             @PositiveOrZero BigDecimal freeDeliveryThreshold,
             @Size(max = 60) String defaultEstimatedTime,
-            Boolean pickupAvailable) {}
+            Boolean pickupAvailable,
+            String currency,
+            String timezone,
+            String locale) {}
 
     public record StoreResponse(UUID id, UUID ownerId, String name, String slug, String description, String logoUrl,
                                 String coverImageUrl, String phone, String whatsappNumber, String email, String address,
                                 String city, String country, BigDecimal latitude, BigDecimal longitude,
                                 String primaryColor, String secondaryColor, String categorySlug, String subCategorySlug,
                                 String templateKey, StoreStatus status, Instant createdAt, Instant updatedAt,
-                                BigDecimal freeDeliveryThreshold, String defaultEstimatedTime, boolean pickupAvailable) {}
+                                BigDecimal freeDeliveryThreshold, String defaultEstimatedTime, boolean pickupAvailable,
+                                String currency, String timezone, String locale, boolean acceptingOrders) {}
+
+    public record AcceptingOrdersRequest(boolean acceptingOrders) {}
 }

@@ -26,6 +26,7 @@ class OrderServiceLookupTest {
     @Mock CurrentUserService currentUser;
     @Mock DailyStoreSalesSyncService dailyStoreSalesSync;
     @Mock OrderCodeGenerator orderCodeGenerator;
+    @Mock BusinessHoursService businessHoursService;
     @InjectMocks OrderService orderService;
 
     @Test
@@ -46,8 +47,37 @@ class OrderServiceLookupTest {
                 .thenReturn(Optional.of(order));
         when(mapper.order(order)).thenReturn(new OrderDtos.OrderResponse(
                 UUID.randomUUID(), store.getId(), "ABC12345", "n", null, "+962790000000", null,
-                null, null, null, null, null, null, null, null, null, null, java.util.List.of()));
+                null, null, null, null, null, null, null, null, null, null, null,
+                java.util.List.of(), "JOD"));
 
         orderService.lookupPublicOrder("slug", new OrderDtos.OrderLookupRequest("ABC12345", null, "+962790000000"));
+    }
+
+    @Test
+    void newOrderSnapshotsStoreCurrency() {
+        Store store = new Store();
+        store.setId(UUID.randomUUID());
+        store.setCurrency("JOD");
+        when(storeService.publicStore("slug")).thenReturn(store);
+        when(orderCodeGenerator.generate()).thenReturn("ABC12345");
+        when(orderRepository.save(org.mockito.ArgumentMatchers.any(CustomerOrder.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+        when(mapper.order(org.mockito.ArgumentMatchers.any(CustomerOrder.class)))
+                .thenReturn(null);
+
+        OrderDtos.CreateOrderRequest request = new OrderDtos.CreateOrderRequest(
+                "Customer", null, "+962790000000", null, null, null, null, null, null, java.util.List.of());
+        orderService.createPublicOrder("slug", request);
+        store.setCurrency("USD");
+        orderService.createPublicOrder("slug", request);
+
+        org.mockito.ArgumentCaptor<CustomerOrder> captor =
+                org.mockito.ArgumentCaptor.forClass(CustomerOrder.class);
+        org.mockito.Mockito.verify(orderRepository, org.mockito.Mockito.times(2)).save(captor.capture());
+        org.junit.jupiter.api.Assertions.assertEquals("JOD", captor.getAllValues().get(0).getCurrency());
+        org.junit.jupiter.api.Assertions.assertEquals("USD", captor.getAllValues().get(1).getCurrency());
+
+        CustomerOrder legacyOrder = new CustomerOrder();
+        org.junit.jupiter.api.Assertions.assertNull(legacyOrder.getCurrency());
     }
 }

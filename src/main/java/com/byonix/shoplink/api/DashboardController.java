@@ -6,10 +6,16 @@ import com.byonix.shoplink.service.*;
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -26,6 +32,8 @@ public class DashboardController {
     private final DeliveryZoneService deliveryZoneService;
     private final OfferService offerService;
     private final AppointmentService appointmentService;
+    private final StoreThemeContentService themeContentService;
+    private final BusinessHoursService businessHoursService;
 
     @PostMapping("/stores")
     public ApiResponse<StoreDtos.StoreResponse> createStore(
@@ -50,6 +58,23 @@ public class DashboardController {
     @PutMapping("/stores/{id}")
     public ApiResponse<StoreDtos.StoreResponse> updateStore(@PathVariable UUID id, @Valid @RequestBody StoreDtos.StoreRequest request) {
         return ApiResponse.ok(storeService.update(id, request));
+    }
+
+    @PutMapping("/stores/{id}/accepting-orders")
+    public ApiResponse<StoreDtos.StoreResponse> updateAcceptingOrders(
+            @PathVariable UUID id, @RequestBody StoreDtos.AcceptingOrdersRequest request) {
+        return ApiResponse.ok(storeService.updateAcceptingOrders(id, request.acceptingOrders()));
+    }
+
+    @GetMapping("/stores/{id}/business-hours")
+    public ApiResponse<BusinessHoursDtos.Response> businessHours(@PathVariable UUID id) {
+        return ApiResponse.ok(businessHoursService.merchantHours(id));
+    }
+
+    @PutMapping("/stores/{id}/business-hours")
+    public ApiResponse<BusinessHoursDtos.Response> updateBusinessHours(
+            @PathVariable UUID id, @Valid @RequestBody BusinessHoursDtos.UpdateRequest request) {
+        return ApiResponse.ok(businessHoursService.update(id, request));
     }
 
     @DeleteMapping("/stores/{id}")
@@ -118,6 +143,12 @@ public class DashboardController {
     @PutMapping("/orders/{id}/status")
     public ApiResponse<OrderDtos.OrderResponse> updateStatus(@PathVariable UUID id, @Valid @RequestBody OrderDtos.StatusUpdateRequest request) {
         return ApiResponse.ok(orderService.updateStatus(id, request));
+    }
+
+    @PutMapping("/orders/{id}/payment-status")
+    public ApiResponse<OrderDtos.OrderResponse> updatePaymentStatus(
+            @PathVariable UUID id, @Valid @RequestBody OrderDtos.PaymentStatusUpdateRequest request) {
+        return ApiResponse.ok(orderService.updatePaymentStatus(id, request));
     }
 
     @GetMapping("/delivery-zones")
@@ -214,5 +245,49 @@ public class DashboardController {
             @RequestParam UUID storeId,
             @RequestParam(required = false, defaultValue = "10") int limit) {
         return ApiResponse.ok(orderService.topProducts(from, to, storeId, limit));
+    }
+
+    // Raw CSV rather than the ApiResponse envelope; errors still come back as the usual JSON
+    // envelope via GlobalExceptionHandler (no `produces` here, so they aren't turned into a 406).
+    @GetMapping("/analytics/orders.csv")
+    public ResponseEntity<byte[]> ordersCsv(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam UUID storeId) {
+        AnalyticsDtos.CsvFile file = orderService.ordersCsv(from, to, storeId);
+        return ResponseEntity.ok()
+                .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment().filename(file.filename()).build().toString())
+                .cacheControl(CacheControl.noStore())
+                .body(file.content());
+    }
+
+    @GetMapping("/theme-content")
+    public ApiResponse<ThemeContentDtos.DashboardContentResponse> themeContent(@RequestParam UUID storeId) {
+        return ApiResponse.ok(themeContentService.getDashboard(storeId));
+    }
+
+    @PutMapping("/theme-content")
+    public ApiResponse<ThemeContentDtos.DashboardContentResponse> saveThemeDraft(
+            @Valid @RequestBody ThemeContentDtos.SaveDraftRequest request) {
+        return ApiResponse.ok(themeContentService.saveDraft(request.storeId(), request.content()));
+    }
+
+    @PostMapping("/theme-content/publish")
+    public ApiResponse<ThemeContentDtos.DashboardContentResponse> publishThemeContent(
+            @Valid @RequestBody ThemeContentDtos.PublishRequest request) {
+        return ApiResponse.ok(themeContentService.publish(request.storeId()));
+    }
+
+    @GetMapping("/theme-content/versions")
+    public ApiResponse<List<ThemeContentDtos.VersionSummary>> themeContentVersions(@RequestParam UUID storeId) {
+        return ApiResponse.ok(themeContentService.listVersions(storeId));
+    }
+
+    @PostMapping("/theme-content/versions/restore")
+    public ApiResponse<ThemeContentDtos.DashboardContentResponse> restoreThemeContentVersion(
+            @Valid @RequestBody ThemeContentDtos.RestoreVersionRequest request) {
+        return ApiResponse.ok(themeContentService.restoreVersion(request.storeId(), request.version()));
     }
 }

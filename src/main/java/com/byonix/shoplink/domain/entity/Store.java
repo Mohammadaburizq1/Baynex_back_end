@@ -72,4 +72,13 @@ public class Store extends BaseAuditable {
     private String defaultEstimatedTime;
     @Column(name = "pickup_available", nullable = false)
     private boolean pickupAvailable = true;
+
+    @Column(nullable = false, length = 3)
+    private String currency = "JOD";
+    @Column(nullable = false, length = 64)
+    private String timezone = "UTC";
+    @Column(nullable = false, length = 10)
+    private String locale = "en";
+    @Column(name = "accepting_orders", nullable = false)
+    private boolean acceptingOrders = true;
 }

@@ -3,6 +3,8 @@ package com.byonix.shoplink.api.dto;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public final class CustomerDtos {
     private CustomerDtos() {}
@@ -19,4 +21,8 @@ public final class CustomerDtos {
             BigDecimal totalSpent,
             Instant firstOrderAt,
             Instant lastOrderAt) {}
+
+    public record ProfileUpdateRequest(@NotBlank @Size(max = 160) String fullName) {}
+
+    public record ProfileResponse(UUID id, String fullName, String email, String phone) {}
 }

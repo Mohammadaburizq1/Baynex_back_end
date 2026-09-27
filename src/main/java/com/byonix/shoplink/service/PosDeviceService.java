@@ -58,6 +58,7 @@ public class PosDeviceService {
     private final ProductAssembler assembler;
     private final MapperService mapper;
     private final ObjectMapper objectMapper;
+    private final PosPriceBookService priceBooks;
     private final SecureRandom secureRandom = new SecureRandom();
 
     // ── dashboard (store owner) ───────────────────────────────────────────────────────────────
@@ -179,6 +180,9 @@ public class PosDeviceService {
         String version = contentHash(posStore, categories, products);
         Instant now = Instant.now();
         device.setLastSyncAt(now);
+        // POS-09: remember exactly which prices this device now holds, so its offline sales can be
+        // validated against them later (also when the catalog is confirmed unchanged).
+        priceBooks.recordDelivery(store.getId(), device.getId(), version, store.getCurrency(), products);
         if (version.equals(knownVersion)) {
             return new PosDtos.CatalogResponse(version, true, now, null, null, null);
         }

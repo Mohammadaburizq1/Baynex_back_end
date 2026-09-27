@@ -42,6 +42,8 @@ public interface OrderRepository extends JpaRepository<CustomerOrder, UUID> {
     // not what they typed on one specific past order; guest orders fall back to the order's own
     // snapshot fields since there's no profile to read. Cancelled orders are excluded entirely,
     // matching how DailyStoreSalesSyncService already treats cancellation as not-real-revenue.
+    // POS walk-in sales are left out: they carry no customer identity (customer sync is POS-12), and
+    // grouping them would invent one "customer" out of every counter sale.
     @Query(value = """
             SELECT
                 o.customer_id AS customerId,
@@ -56,6 +58,7 @@ public interface OrderRepository extends JpaRepository<CustomerOrder, UUID> {
             LEFT JOIN app_users u ON u.id = o.customer_id
             WHERE o.store_id = :storeId
               AND o.status <> 'CANCELLED'
+              AND o.source <> 'POS'
             GROUP BY
                 COALESCE(CAST(o.customer_id AS VARCHAR(36)),
                          CONCAT('guest:', COALESCE(NULLIF(TRIM(o.customer_phone), ''), o.customer_email))),

@@ -1,6 +1,7 @@
 package com.byonix.shoplink.domain.entity;
 
 import com.byonix.shoplink.domain.enums.DeliveryMethod;
+import com.byonix.shoplink.domain.enums.OrderSource;
 import com.byonix.shoplink.domain.enums.OrderStatus;
 import com.byonix.shoplink.domain.enums.PaymentMethod;
 import com.byonix.shoplink.domain.enums.PaymentStatus;
@@ -73,6 +74,20 @@ public class CustomerOrder extends BaseAuditable {
     private String currency;
     @Column(length = 1000)
     private String notes;
+
+    // POS-09: a sale rung up on a POS device is an ordinary order with source POS. The device and
+    // its local order id make the upload idempotent (unique together); the receipt number is the
+    // one printed/shown at the counter before the order had a server code.
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private OrderSource source = OrderSource.WEB;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pos_device_id")
+    private PosDevice posDevice;
+    @Column(name = "pos_local_order_id")
+    private UUID posLocalOrderId;
+    @Column(name = "pos_receipt_number", length = 40)
+    private String posReceiptNumber;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();

@@ -73,5 +73,6 @@ public final class OrderDtos {
                                 PaymentMethod paymentMethod, PaymentStatus paymentStatus, OrderStatus status,
                                 BigDecimal subtotal, BigDecimal deliveryFee,
                                 BigDecimal discount, String discountCode, BigDecimal total, String notes, Instant createdAt,
-                                List<OrderItemResponse> items, String currency) {}
+                                List<OrderItemResponse> items, String currency, OrderSource source,
+                                String posReceiptNumber) {}
 }

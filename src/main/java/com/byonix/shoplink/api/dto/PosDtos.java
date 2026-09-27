@@ -1,11 +1,19 @@
 package com.byonix.shoplink.api.dto;
 
 import com.byonix.shoplink.domain.enums.PosDeviceStatus;
+import com.byonix.shoplink.domain.enums.PosSyncConflictStatus;
+import com.byonix.shoplink.domain.enums.PosSyncConflictType;
+import com.byonix.shoplink.domain.enums.PosSyncOperationStatus;
 import com.byonix.shoplink.domain.enums.StoreStatus;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -45,4 +53,62 @@ public class PosDtos {
     public record CatalogResponse(String catalogVersion, boolean unchanged, Instant generatedAt, PosStore store,
                                   List<CategoryDtos.CategoryResponse> categories,
                                   List<ProductDtos.ProductResponse> products) {}
+
+    // ── POS-09 offline order upload ───────────────────────────────────────────────────────────
+
+    /** Payment methods a POS may record offline. Nothing here talks to a payment gateway. */
+    public enum PosPaymentMethod {
+        CASH,
+        /** Card taken on a standalone terminal; the cashier confirmed it was approved. */
+        EXTERNAL_CARD
+    }
+
+    /**
+     * One sold line exactly as the cashier rang it up. unitPrice includes the add-on deltas. The server
+     * recomputes both prices from the catalog snapshot the device was given and refuses the upload
+     * if they differ; names and SKUs are taken from that snapshot, never from the device.
+     */
+    public record SyncOrderItem(@NotNull UUID productId, UUID variantId,
+                                @Size(max = 30) List<@NotNull UUID> modifierOptionIds,
+                                @NotNull @Min(1) @Max(10000) Integer quantity,
+                                @NotNull BigDecimal unitPrice, @NotNull BigDecimal lineTotal) {}
+
+    /**
+     * An offline sale. operationId is the idempotency key; originDeviceId is the device that made the
+     * sale (the caller itself, or the device it replaced after a revocation — same store only). The
+     * store is never taken from the payload: it is the authenticated device's store.
+     */
+    public record SyncOrderRequest(@NotNull UUID operationId, @NotNull UUID originDeviceId, @NotNull UUID localOrderId,
+                                   @NotBlank @Size(max = 40) String receiptNumber,
+                                   @NotBlank @Size(max = 64) String catalogVersion,
+                                   @NotNull Instant soldAt,
+                                   @NotBlank @Size(min = 3, max = 3) String currency,
+                                   @NotNull PosPaymentMethod paymentMethod,
+                                   @NotNull BigDecimal subtotal, @NotNull BigDecimal discount, @NotNull BigDecimal total,
+                                   @Size(max = 500) String note,
+                                   @NotEmpty @Size(max = 200) List<@Valid SyncOrderItem> items) {}
+
+    /** The server's stock count for an item after the upload (null = not tracked). */
+    public record StockLevel(UUID productId, UUID variantId, Integer stock) {}
+
+    public record SyncConflict(UUID id, PosSyncConflictType type, UUID productId, UUID variantId, String itemName,
+                               Integer requestedQuantity, Integer appliedQuantity, Integer shortfall, String detail) {}
+
+    /** replayed = this operation id was already applied; nothing was created or moved this time. */
+    public record SyncOrderResponse(UUID operationId, boolean replayed, PosSyncOperationStatus status, UUID orderId,
+                                    String orderCode, BigDecimal total, String currency, Instant syncedAt,
+                                    List<StockLevel> inventory, List<SyncConflict> conflicts) {}
+
+    // ── dashboard: conflicts to review ────────────────────────────────────────────────────────
+
+    public record ConflictResponse(UUID id, UUID storeId, UUID deviceId, String deviceName, UUID orderId, String orderCode,
+                                   String receiptNumber, PosSyncConflictType type, UUID productId, UUID variantId,
+                                   String itemName, Integer requestedQuantity, Integer appliedQuantity, Integer shortfall,
+                                   Integer stockBefore, Integer stockAfter, BigDecimal saleUnitPrice,
+                                   BigDecimal currentUnitPrice, String detail, PosSyncConflictStatus status,
+                                   Instant createdAt, Instant resolvedAt, String resolutionNote) {}
+
+    public record ConflictSummary(long open, List<ConflictResponse> conflicts) {}
+
+    public record ResolveConflictRequest(@Size(max = 300) String note) {}
 }

@@ -5,6 +5,7 @@ import com.byonix.shoplink.common.ApiResponse;
 import com.byonix.shoplink.security.pos.PosDevicePrincipal;
 import com.byonix.shoplink.security.request.ClientRequestContext;
 import com.byonix.shoplink.service.PosDeviceService;
+import com.byonix.shoplink.service.PosOrderSyncService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class PosController {
     private final PosDeviceService deviceService;
+    private final PosOrderSyncService orderSyncService;
 
     @PostMapping("/activate")
     public ApiResponse<PosDtos.ActivationResponse> activate(@Valid @RequestBody PosDtos.ActivateRequest request,
@@ -34,5 +36,15 @@ public class PosController {
     public ApiResponse<PosDtos.CatalogResponse> catalog(@AuthenticationPrincipal PosDevicePrincipal device,
                                                         @RequestParam(required = false) String knownVersion) {
         return ApiResponse.ok(deviceService.catalog(device, knownVersion));
+    }
+
+    /**
+     * Uploads one sale completed on the device (possibly offline). Idempotent on operationId: a retry
+     * returns the same order. The store is the authenticated device's store, never the payload's.
+     */
+    @PostMapping("/orders/sync")
+    public ApiResponse<PosDtos.SyncOrderResponse> syncOrder(@AuthenticationPrincipal PosDevicePrincipal device,
+                                                            @Valid @RequestBody PosDtos.SyncOrderRequest request) {
+        return ApiResponse.ok(orderSyncService.sync(device, request));
     }
 }

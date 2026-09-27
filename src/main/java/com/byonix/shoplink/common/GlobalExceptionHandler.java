@@ -70,6 +70,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(ex.getMessage(), ex.code()));
     }
 
+    @ExceptionHandler(com.byonix.shoplink.service.PosSyncRejectedException.class)
+    public ResponseEntity<ApiResponse<Void>> posSyncRejected(com.byonix.shoplink.service.PosSyncRejectedException ex) {
+        return ResponseEntity.status(ex.status()).body(ApiResponse.error(ex.getMessage(), ex.code()));
+    }
+
     @ExceptionHandler(RateLimitExceededException.class)
     ResponseEntity<ApiResponse<Void>> rateLimited() {
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(ApiResponse.error("Too many requests"));

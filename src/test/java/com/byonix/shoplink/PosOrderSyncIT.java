@@ -412,9 +412,9 @@ class PosOrderSyncIT {
         // Malformed quantity.
         Sale zero = new Sale(a, c.version).line(water, null, List.of(), 0, "0.750", "0").totals("0", "0", "0");
         sync(a, zero).andExpect(status().isBadRequest());
-        // Discounts arrive with POS-13.
+        // A discount amount with no discount code behind it is never accepted (POS-13).
         Sale discounted = new Sale(a, c.version).line(water, null, List.of(), 1, "0.750", "0.750").totals("0.750", "0.100", "0.650");
-        sync(a, discounted).andExpect(status().isUnprocessableContent()).andExpect(jsonPath("$.code").value("POS_SYNC_DISCOUNT_NOT_SUPPORTED"));
+        sync(a, discounted).andExpect(status().isUnprocessableContent()).andExpect(jsonPath("$.code").value("POS_SYNC_DISCOUNT_MISMATCH"));
         assertThat(posOrders(storeA)).isZero();
         assertThat(jdbc.queryForObject("SELECT count(*) FROM pos_sync_operations WHERE store_id = ?::uuid", Long.class, storeA)).isZero();
         // POS sales never appear as a made-up "customer".

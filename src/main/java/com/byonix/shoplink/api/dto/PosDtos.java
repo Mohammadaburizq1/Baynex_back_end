@@ -1,5 +1,7 @@
 package com.byonix.shoplink.api.dto;
 
+import com.byonix.shoplink.domain.enums.DiscountType;
+import com.byonix.shoplink.domain.enums.PermissionLevel;
 import com.byonix.shoplink.domain.enums.PosDeviceStatus;
 import com.byonix.shoplink.domain.enums.PosSyncConflictStatus;
 import com.byonix.shoplink.domain.enums.PosSyncConflictType;
@@ -15,6 +17,7 @@ import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,7 +40,9 @@ public class PosDtos {
     /** What a POS needs to know about its store. Owner/contact/billing data is deliberately absent. */
     public record PosStore(UUID id, String slug, String name, String currency, String timezone, String locale,
                            String templateKey, String categorySlug, StoreStatus status, boolean acceptingOrders,
-                           boolean pickupAvailable) {}
+                           boolean pickupAvailable,
+                           // POS-15 receipt header: the store's public contact details (as on its storefront).
+                           String phone, String address, String city) {}
 
     /** The only response that ever carries the plaintext device credential. */
     public record ActivationResponse(UUID deviceId, String deviceName, String deviceCredential,
@@ -52,7 +57,49 @@ public class PosDtos {
      */
     public record CatalogResponse(String catalogVersion, boolean unchanged, Instant generatedAt, PosStore store,
                                   List<CategoryDtos.CategoryResponse> categories,
-                                  List<ProductDtos.ProductResponse> products) {}
+                                  List<ProductDtos.ProductResponse> products,
+                                  List<PosOffer> offers) {}
+
+    /**
+     * POS-13: a discount code as the POS may apply it offline — the existing offer rules, nothing
+     * more. The live use count is not sent (it changes with every web order); exhausted says whether
+     * the limit was already reached when this catalog was built.
+     */
+    public record PosOffer(UUID id, String code, DiscountType discountType, BigDecimal discountValue,
+                           BigDecimal minOrderAmount, Integer maxUses, boolean exhausted,
+                           OffsetDateTime startsAt, OffsetDateTime expiresAt, boolean active) {}
+
+    // ── POS-12 customers ──────────────────────────────────────────────────────────────────────
+
+    /**
+     * A customer of this store as the dashboard's Customers page knows them: an account that ordered
+     * here (customerId set), or a guest contact grouped by phone/email (customerId null). key is
+     * stable across syncs. No passwords, tokens, verification or security data.
+     */
+    public record PosCustomer(String key, UUID customerId, String name, String phone, String email,
+                              long orderCount, Instant lastOrderAt) {}
+
+    public record CustomersResponse(String version, boolean unchanged, Instant generatedAt, List<PosCustomer> customers) {}
+
+    // ── POS-14 staff ──────────────────────────────────────────────────────────────────────────
+
+    /** Salted PBKDF2-HMAC-SHA256 of a PIN, for offline verification on the till. Never the PIN. */
+    public record PosPin(String salt, String hash, int iterations, Instant expiresAt) {}
+
+    /**
+     * Who may use this store's POS: the owner (always a POS manager) and its active staff. posLevel
+     * VIEW = cashier, EDIT = POS manager; offersLevel gates applying discount codes without approval.
+     */
+    public record PosStaffMember(UUID userId, String name, boolean owner, PermissionLevel posLevel,
+                                 PermissionLevel ordersLevel, PermissionLevel offersLevel, PosPin pin) {}
+
+    public record StaffResponse(String version, boolean unchanged, Instant generatedAt, List<PosStaffMember> staff) {}
+
+    public record SetPinRequest(@NotBlank @Size(max = 200) String currentPassword,
+                                @NotBlank @jakarta.validation.constraints.Pattern(regexp = "^[0-9]{4,8}$",
+                                        message = "A POS PIN is 4 to 8 digits") String pin) {}
+
+    public record PinStatus(boolean set, Instant setAt, Instant expiresAt) {}
 
     // ── POS-09 offline order upload ───────────────────────────────────────────────────────────
 
@@ -86,7 +133,31 @@ public class PosDtos {
                                    @NotNull PosPaymentMethod paymentMethod,
                                    @NotNull BigDecimal subtotal, @NotNull BigDecimal discount, @NotNull BigDecimal total,
                                    @Size(max = 500) String note,
-                                   @NotEmpty @Size(max = 200) List<@Valid SyncOrderItem> items) {}
+                                   @NotEmpty @Size(max = 200) List<@Valid SyncOrderItem> items,
+                                   // POS-12..14, all optional so uploads queued by older app versions stay valid.
+                                   @Valid SaleCustomer customer,
+                                   @Valid SaleOffer offer,
+                                   @Valid SaleStaff staff,
+                                   @Size(max = 20) List<@Valid SaleOverride> overrides) {}
+
+    /** customerId = an account from this store's customer list; otherwise a contact typed at the till. */
+    public record SaleCustomer(UUID customerId, @Size(max = 160) String name, @Size(max = 40) String phone,
+                               @Size(max = 255) String email) {}
+
+    /**
+     * The discount code applied at the till. The amount is NOT taken from here: the server recomputes it
+     * from the offer as this device's catalog snapshot had it, and the sale's own discount/total must
+     * match that exactly.
+     */
+    public record SaleOffer(@NotNull UUID offerId, @NotBlank @Size(max = 40) String code) {}
+
+    /** The cashier signed in on the till (name as shown there). */
+    public record SaleStaff(@NotNull UUID userId, @NotBlank @Size(max = 160) String name) {}
+
+    /** A sensitive action a manager approved with their PIN at the till. */
+    public record SaleOverride(@NotBlank @Size(max = 40) String action, @NotNull UUID managerId,
+                               @NotBlank @Size(max = 160) String managerName, @NotNull Instant approvedAt,
+                               @Size(max = 300) String detail) {}
 
     /** The server's stock count for an item after the upload (null = not tracked). */
     public record StockLevel(UUID productId, UUID variantId, Integer stock) {}

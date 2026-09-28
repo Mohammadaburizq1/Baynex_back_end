@@ -94,6 +94,10 @@ public class PosOrderSyncService {
     private final InventoryLedger ledger;
     private final DailyStoreSalesSyncService dailyStoreSalesSync;
     private final OrderCodeGenerator orderCodeGenerator;
+    private final com.byonix.shoplink.repository.OfferRepository offerRepository;
+    private final com.byonix.shoplink.repository.UserRepository userRepository;
+    private final PosStaffService staffService;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     public PosDtos.SyncOrderResponse sync(PosDevicePrincipal principal, PosDtos.SyncOrderRequest request) {
         try {
@@ -142,6 +146,8 @@ public class PosOrderSyncService {
                 .orElseThrow(() -> new PosSyncRejectedException("CATALOG_VERSION_UNKNOWN",
                         "This sale refers to a catalog version this device was never given"));
         List<Line> lines = validate(r, book);
+        Instant soldAt = saleTime(r.soldAt(), origin, Instant.now());
+        BigDecimal discount = validateDiscount(r, book, soldAt, lines);
 
         Instant now = Instant.now();
         PosSyncOperation op = new PosSyncOperation();
@@ -250,11 +256,16 @@ public class PosOrderSyncService {
             subtotal = subtotal.add(line.lineTotal());
         }
 
+        // POS-13: the discount stays what the till gave (validated above against the device's snapshot);
+        // what changed on the server since is recorded, never applied to this sale.
+        com.byonix.shoplink.domain.entity.Offer offer = r.offer() == null ? null : applyOfferUsage(r.offer(), book, store, conflicts);
+        order.setOffer(offer);
+
         order.setStore(store);
         order.setCurrency(book.currency());
         order.setOrderCode(orderCode);
-        order.setCustomerName(WALK_IN_CUSTOMER);
-        order.setCustomerPhone("");
+        applyCustomer(order, r.customer(), store, conflicts);
+        applyStaff(order, r.staff(), store, conflicts);
         order.setDeliveryMethod(DeliveryMethod.PICKUP);
         order.setPaymentMethod(r.paymentMethod() == PosDtos.PosPaymentMethod.CASH ? PaymentMethod.CASH : PaymentMethod.CARD);
         // Settled at the counter: cash in the drawer, or a card terminal the cashier saw approve.
@@ -264,8 +275,8 @@ public class PosOrderSyncService {
         order.setStatus(OrderStatus.DELIVERED);
         order.setSubtotal(subtotal);
         order.setDeliveryFee(BigDecimal.ZERO);
-        order.setDiscount(BigDecimal.ZERO);
-        order.setTotal(subtotal);
+        order.setDiscount(discount);
+        order.setTotal(subtotal.subtract(discount));
         order.setNotes(r.note() == null || r.note().isBlank() ? null : r.note().trim());
         order.setSource(OrderSource.POS);
         order.setPosDevice(origin);
@@ -273,9 +284,10 @@ public class PosOrderSyncService {
         order.setPosReceiptNumber(r.receiptNumber());
         // Reports count the sale on the day it happened, not the day it was uploaded. The device
         // clock is only trusted within bounds.
-        order.setCreatedAt(saleTime(r.soldAt(), origin, now));
+        order.setCreatedAt(soldAt);
         CustomerOrder saved = orderRepository.saveAndFlush(order);
         dailyStoreSalesSync.applyNewOrder(saved);
+        recordOverrides(r, saved, store, origin, conflicts);
 
         for (PosSyncConflict c : conflicts) {
             c.setStoreId(store.getId());
@@ -335,14 +347,133 @@ public class PosOrderSyncService {
         }
     }
 
+    // ── POS-12..14: customer, discount usage, cashier, manager approvals ─────────────────────
+
+    /**
+     * A named customer. An account is linked only if it already is this store's customer (it has an
+     * order here); its name/phone/email then come from the account, never from the till, so verified
+     * identity data is never overwritten. Anything else is kept as the contact typed at the till (a
+     * guest customer of this store, grouped by phone/email like any guest order). Store B's customers
+     * cannot be attached to Store A's sale: an account that never ordered here is not linked.
+     */
+    private void applyCustomer(CustomerOrder order, PosDtos.SaleCustomer c, Store store, List<PosSyncConflict> conflicts) {
+        if (c == null) {
+            order.setCustomerName(WALK_IN_CUSTOMER);
+            order.setCustomerPhone("");
+            return;
+        }
+        if (c.customerId() != null) {
+            var account = userRepository.findById(c.customerId())
+                    .filter(u -> u.getRole() == com.byonix.shoplink.domain.enums.Role.CUSTOMER && u.isActive())
+                    .filter(u -> orderRepository.existsByStore_IdAndCustomer_IdAndStatusNot(store.getId(), u.getId(), OrderStatus.CANCELLED));
+            if (account.isPresent()) {
+                var u = account.get();
+                order.setCustomer(u);
+                order.setCustomerName(truncate(u.getFullName(), 160));
+                order.setCustomerPhone(u.getPhone() == null ? "" : truncate(u.getPhone(), 40));
+                order.setCustomerEmail(u.getEmail());
+                return;
+            }
+            conflicts.add(other(PosSyncConflictType.CUSTOMER_UNLINKED, nameOr(c.name(), "Customer"),
+                    "The customer account chosen at the till could not be linked to this store. The sale keeps the name and contact shown at the till."));
+        }
+        order.setCustomerName(nameOr(c.name(), WALK_IN_CUSTOMER));
+        order.setCustomerPhone(c.phone() == null ? "" : c.phone().trim());
+        order.setCustomerEmail(c.email() == null || c.email().isBlank() ? null : c.email().trim());
+    }
+
+    private com.byonix.shoplink.domain.entity.Offer applyOfferUsage(PosDtos.SaleOffer ref, PosPriceBookService.PriceBook book, Store store,
+                                                                     List<PosSyncConflict> conflicts) {
+        PosPriceBookService.BookOffer snapshot = book.offer(ref.offerId()).orElseThrow();
+        var current = offerRepository.findByIdAndStore_Id(ref.offerId(), store.getId());
+        if (current.isEmpty()) {
+            conflicts.add(other(PosSyncConflictType.DISCOUNT_CHANGED, snapshot.code(),
+                    "This discount code was deleted after the sale. The sale keeps the discount it gave."));
+            return null;
+        }
+        var o = current.get();
+        boolean changed = !o.isActive() || o.getDiscountType() != snapshot.discountType()
+                || o.getDiscountValue().compareTo(snapshot.discountValue()) != 0
+                || !java.util.Objects.equals(o.getMinOrderAmount() == null ? null : o.getMinOrderAmount().stripTrailingZeros(),
+                        snapshot.minOrderAmount() == null ? null : snapshot.minOrderAmount().stripTrailingZeros());
+        if (changed) {
+            conflicts.add(other(PosSyncConflictType.DISCOUNT_CHANGED, snapshot.code(),
+                    "This discount code was changed or switched off after the sale. The sale keeps the discount it gave."));
+        }
+        // The same guarded counter as a website order; a limit already reached is recorded, not undone.
+        if (offerRepository.incrementUsageIfAvailable(o.getId()) == 0) {
+            conflicts.add(other(PosSyncConflictType.DISCOUNT_LIMIT_REACHED, snapshot.code(),
+                    "This discount code had already reached its usage limit when the sale was uploaded. The sale keeps the discount it gave."));
+        }
+        return offerRepository.findById(o.getId()).orElse(null);
+    }
+
+    /** The cashier: linked while they are still this store's POS user; the till's name is kept either way. */
+    private void applyStaff(CustomerOrder order, PosDtos.SaleStaff s, Store store, List<PosSyncConflict> conflicts) {
+        if (s == null) {
+            return; // uploaded by an app version from before POS-14
+        }
+        order.setPosStaffName(truncate(s.name().trim(), 160));
+        var member = staffService.currentMember(store, s.userId())
+                .filter(m -> m.posLevel() != com.byonix.shoplink.domain.enums.PermissionLevel.NONE);
+        if (member.isPresent()) {
+            order.setPosStaff(userRepository.findById(s.userId()).orElse(null));
+        } else {
+            conflicts.add(other(PosSyncConflictType.STAFF_UNAVAILABLE, s.name(),
+                    "The cashier is no longer a POS user of this store. The sale is kept with the name shown at the till."));
+        }
+    }
+
+    /** Every manager approval is stored with the sale; one the grid cannot confirm is also flagged. */
+    private void recordOverrides(PosDtos.SyncOrderRequest r, CustomerOrder saved, Store store, PosDevice origin,
+                                 List<PosSyncConflict> conflicts) {
+        if (r.overrides() == null) return;
+        for (PosDtos.SaleOverride o : r.overrides()) {
+            boolean verified = staffService.currentMember(store, o.managerId())
+                    .filter(m -> m.posLevel() == com.byonix.shoplink.domain.enums.PermissionLevel.EDIT).isPresent();
+            jdbc.update("""
+                    INSERT INTO pos_manager_overrides (store_id, device_id, order_id, action, acting_staff_id, acting_staff_name,
+                        manager_id, manager_name, detail, approved_at, verified)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, store.getId(), origin.getId(), saved.getId(), o.action(),
+                    r.staff() == null ? null : existingUser(r.staff().userId()), r.staff() == null ? null : truncate(r.staff().name(), 160),
+                    existingUser(o.managerId()), truncate(o.managerName(), 160), o.detail(), java.sql.Timestamp.from(o.approvedAt()), verified);
+            if (!verified) {
+                conflicts.add(other(PosSyncConflictType.OVERRIDE_UNVERIFIED, o.managerName(),
+                        "The approval of " + o.action() + " at the till was given by someone who is not a POS manager of this store now. Check it."));
+            }
+        }
+    }
+
+    private UUID existingUser(UUID id) {
+        return id != null && userRepository.existsById(id) ? id : null;
+    }
+
+    private static PosSyncConflict other(PosSyncConflictType type, String itemName, String detail) {
+        PosSyncConflict c = new PosSyncConflict();
+        c.setType(type);
+        c.setItemName(truncate(itemName == null || itemName.isBlank() ? type.name() : itemName.trim(), 300));
+        c.setDetail(detail);
+        return c;
+    }
+
+    private static String nameOr(String name, String fallback) {
+        return name == null || name.isBlank() ? fallback : truncate(name.trim(), 160);
+    }
+
+    private static String truncate(String s, int max) {
+        return s == null || s.length() <= max ? s : s.substring(0, max);
+    }
+
     // ── validation against the device's price book ────────────────────────────────────────────
 
     private List<Line> validate(PosDtos.SyncOrderRequest r, PosPriceBookService.PriceBook book) {
         if (!book.currency().equalsIgnoreCase(r.currency())) {
             throw new PosSyncRejectedException("CURRENCY_MISMATCH", "The sale's currency does not match the store's catalog");
         }
-        if (r.discount().signum() != 0) {
-            throw new PosSyncRejectedException("DISCOUNT_NOT_SUPPORTED", "POS discounts are not supported yet");
+        if (r.offer() == null && r.discount().signum() != 0) {
+            // The discount amount is never taken on the device's word: no code, no discount.
+            throw new PosSyncRejectedException("DISCOUNT_MISMATCH", "A discount was sent without the discount code it came from");
         }
         List<Line> lines = new ArrayList<>();
         BigDecimal subtotal = BigDecimal.ZERO;
@@ -385,6 +516,34 @@ public class PosOrderSyncService {
             throw new PosSyncRejectedException("TOTAL_MISMATCH", "The sale's totals do not add up");
         }
         return lines;
+    }
+
+    /**
+     * POS-13: the discount is recomputed from the offer as this device's catalog snapshot had it, with
+     * the existing offer rules (validity window at the time of sale, minimum order, percentage rounded
+     * to 3 decimals half-up, never more than the subtotal). The device's own amount must equal it.
+     */
+    private BigDecimal validateDiscount(PosDtos.SyncOrderRequest r, PosPriceBookService.PriceBook book, Instant soldAt, List<Line> lines) {
+        if (r.offer() == null) {
+            return BigDecimal.ZERO;
+        }
+        PosPriceBookService.BookOffer offer = book.offer(r.offer().offerId())
+                .filter(o -> o.code().equalsIgnoreCase(r.offer().code().trim()))
+                .orElseThrow(() -> new PosSyncRejectedException("UNKNOWN_DISCOUNT",
+                        "This sale used a discount code that was not in the catalog this device was given"));
+        java.time.OffsetDateTime at = soldAt.atOffset(java.time.ZoneOffset.UTC);
+        if ((offer.startsAt() != null && at.isBefore(offer.startsAt())) || (offer.expiresAt() != null && at.isAfter(offer.expiresAt()))) {
+            throw new PosSyncRejectedException("DISCOUNT_NOT_VALID", "The discount code \"" + offer.code() + "\" was not valid at the time of this sale");
+        }
+        BigDecimal subtotal = lines.stream().map(Line::lineTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (offer.minOrderAmount() != null && subtotal.compareTo(offer.minOrderAmount()) < 0) {
+            throw new PosSyncRejectedException("DISCOUNT_NOT_VALID", "This sale is below the minimum order of \"" + offer.code() + "\"");
+        }
+        BigDecimal amount = OfferService.computeAmount(offer.discountType(), offer.discountValue(), subtotal);
+        if (amount.compareTo(r.discount()) != 0) {
+            throw new PosSyncRejectedException("DISCOUNT_MISMATCH", "The discount on this sale does not match the code \"" + offer.code() + "\"");
+        }
+        return amount;
     }
 
     private static List<SelectedAddOn> addOns(PosPriceBookService.BookProduct product, List<UUID> ids) {
@@ -503,6 +662,18 @@ public class PosOrderSyncService {
                 .append(r.currency().toUpperCase()).append('|').append(r.paymentMethod()).append('|')
                 .append(plain(r.subtotal())).append('|').append(plain(r.discount())).append('|').append(plain(r.total()))
                 .append('|').append(Objects.toString(r.note(), ""));
+        // POS-12..14 fields only when present, so uploads queued before them hash exactly as before.
+        if (r.customer() != null) {
+            b.append("|customer:").append(r.customer().customerId()).append(',').append(Objects.toString(r.customer().name(), ""))
+                    .append(',').append(Objects.toString(r.customer().phone(), "")).append(',').append(Objects.toString(r.customer().email(), ""));
+        }
+        if (r.offer() != null) b.append("|offer:").append(r.offer().offerId()).append(',').append(r.offer().code());
+        if (r.staff() != null) b.append("|staff:").append(r.staff().userId()).append(',').append(r.staff().name());
+        if (r.overrides() != null) {
+            for (PosDtos.SaleOverride o : r.overrides()) {
+                b.append("|override:").append(o.action()).append(',').append(o.managerId()).append(',').append(o.approvedAt());
+            }
+        }
         for (PosDtos.SyncOrderItem i : r.items()) {
             b.append("|item:").append(i.productId()).append(',').append(i.variantId()).append(',')
                     .append(i.modifierOptionIds() == null ? "" : i.modifierOptionIds().stream().map(UUID::toString).sorted().toList())

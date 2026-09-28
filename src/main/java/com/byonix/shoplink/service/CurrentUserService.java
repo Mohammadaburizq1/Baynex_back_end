@@ -7,6 +7,7 @@ import com.byonix.shoplink.domain.enums.DashboardSection;
 import com.byonix.shoplink.domain.enums.PermissionLevel;
 import com.byonix.shoplink.domain.enums.Role;
 import com.byonix.shoplink.repository.StaffPermissionRepository;
+import com.byonix.shoplink.repository.UserRepository;
 import com.byonix.shoplink.security.AppUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -22,6 +23,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CurrentUserService {
     private final StaffPermissionRepository staffPermissionRepository;
+    private final UserRepository userRepository;
 
     public User user() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -113,7 +115,7 @@ public class CurrentUserService {
         }
         PermissionLevel actual = staffPermissionRepository.findByUser_IdAndSection(u.getId(), section)
                 .map(StaffPermission::getLevel)
-                .orElse(PermissionLevel.EDIT);
+                .orElse(defaultStaffLevel(section));
         if (actual.ordinal() < required.ordinal()) {
             throw new AccessDeniedException("Access denied");
         }
@@ -132,13 +134,22 @@ public class CurrentUserService {
         }
     }
 
+    /**
+     * A staff member with no row for a section. Every dashboard section defaults to EDIT (legacy
+     * staff keep full access); POS defaults to VIEW — a cashier, never a POS manager by accident.
+     */
+    public static PermissionLevel defaultStaffLevel(DashboardSection section) {
+        return section == DashboardSection.POS ? PermissionLevel.VIEW : PermissionLevel.EDIT;
+    }
+
     // Self-service: lets a staff member fetch their OWN effective grid. Every section is always
     // present in the result (defaulted to EDIT) regardless of how many rows actually exist, so the
     // frontend never has to reason about a missing key.
     public Map<DashboardSection, PermissionLevel> effectivePermissions(UUID staffUserId) {
+        boolean staff = userRepository.findById(staffUserId).map(u -> u.getRole() == Role.MERCHANT_STAFF).orElse(true);
         Map<DashboardSection, PermissionLevel> result = new EnumMap<>(DashboardSection.class);
         for (DashboardSection section : DashboardSection.values()) {
-            result.put(section, PermissionLevel.EDIT);
+            result.put(section, staff ? defaultStaffLevel(section) : PermissionLevel.EDIT);
         }
         for (StaffPermission p : staffPermissionRepository.findByUser_Id(staffUserId)) {
             result.put(p.getSection(), p.getLevel());

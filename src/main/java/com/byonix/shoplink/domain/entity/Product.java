@@ -46,6 +46,10 @@ public class Product extends BaseAuditable {
     private String galleryJson;
     @Column(length = 120)
     private String sku;
+    // POS-16: the code printed on the pack (EAN/UPC/any), scanned at the till. Unique per store
+    // across products and variants; null = none.
+    @Column(length = 64)
+    private String barcode;
     // Null = not tracked for this product (services never have one; a PRODUCT/FOOD_ITEM the
     // merchant hasn't set a quantity for yet also reads as "not tracked", not a false zero).
     @Column

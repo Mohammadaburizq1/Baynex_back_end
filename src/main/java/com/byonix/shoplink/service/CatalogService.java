@@ -239,6 +239,22 @@ public class CatalogService {
                 throw new ConflictException("The SKU \"" + sku + "\" is already used by another product in your store");
             }
         }
+        // Null keeps the current barcode (clients that predate POS-16 do not send it); "" removes it.
+        if (r.barcode() != null) {
+            String barcode = blank(r.barcode());
+            if (barcode != null) {
+                UUID self = p.getId() == null ? new UUID(0, 0) : p.getId();
+                if (!productRepository.findBarcodesUsedByOtherProducts(store.getId(), self, List.of(barcode)).isEmpty()
+                        || !variantRepository.findBarcodesUsedByOtherProducts(store.getId(), self, List.of(barcode)).isEmpty()) {
+                    throw new ConflictException("The barcode \"" + barcode + "\" is already used by another product in your store");
+                }
+                if (p.getId() != null && variantRepository.findBarcodesUsedByOtherProducts(store.getId(), new UUID(0, 0), List.of(barcode)).size()
+                        > variantRepository.findBarcodesUsedByOtherProducts(store.getId(), self, List.of(barcode)).size()) {
+                    throw new ConflictException("The barcode \"" + barcode + "\" is already used by one of this product's variants");
+                }
+            }
+            p.setBarcode(barcode);
+        }
         p.setStore(store);
         if (r.categoryId() != null) {
             Category category = categoryRepository.findById(r.categoryId()).orElseThrow(() -> new EntityNotFoundException("Category not found"));

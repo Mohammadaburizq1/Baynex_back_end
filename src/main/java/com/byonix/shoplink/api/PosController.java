@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.*;
 public class PosController {
     private final PosDeviceService deviceService;
     private final PosOrderSyncService orderSyncService;
+    private final com.byonix.shoplink.service.PosCustomerService customerService;
+    private final com.byonix.shoplink.service.PosStaffService staffService;
 
     @PostMapping("/activate")
     public ApiResponse<PosDtos.ActivationResponse> activate(@Valid @RequestBody PosDtos.ActivateRequest request,
@@ -36,6 +38,20 @@ public class PosController {
     public ApiResponse<PosDtos.CatalogResponse> catalog(@AuthenticationPrincipal PosDevicePrincipal device,
                                                         @RequestParam(required = false) String knownVersion) {
         return ApiResponse.ok(deviceService.catalog(device, knownVersion));
+    }
+
+    /** POS-12: this store's customers (accounts and guest contacts from its orders). */
+    @GetMapping("/customers")
+    public ApiResponse<PosDtos.CustomersResponse> customers(@AuthenticationPrincipal PosDevicePrincipal device,
+                                                            @RequestParam(required = false) String knownVersion) {
+        return ApiResponse.ok(customerService.customers(device, knownVersion));
+    }
+
+    /** POS-14: this store's POS people, their POS rights and PIN hashes (never PINs). */
+    @GetMapping("/staff")
+    public ApiResponse<PosDtos.StaffResponse> staff(@AuthenticationPrincipal PosDevicePrincipal device,
+                                                    @RequestParam(required = false) String knownVersion) {
+        return ApiResponse.ok(staffService.staff(device, knownVersion));
     }
 
     /**

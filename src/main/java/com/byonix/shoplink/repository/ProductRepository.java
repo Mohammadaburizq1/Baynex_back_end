@@ -56,6 +56,15 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
                                              @Param("productId") UUID productId,
                                              @Param("skus") Collection<String> skus);
 
+    /** POS-16: barcodes share one namespace per store across products and variants. */
+    @Query("""
+            select p.barcode from Product p
+            where p.store.id = :storeId and p.id <> :productId and p.barcode in :barcodes
+            """)
+    List<String> findBarcodesUsedByOtherProducts(@Param("storeId") UUID storeId,
+                                                 @Param("productId") UUID productId,
+                                                 @Param("barcodes") Collection<String> barcodes);
+
     // Atomic, single-statement decrement guarded by the same WHERE clause that reads the current
     // value — the DB serializes concurrent UPDATEs to the same row, so two simultaneous orders
     // for the last unit of stock can't both succeed (unlike a Java-side read-then-write, which

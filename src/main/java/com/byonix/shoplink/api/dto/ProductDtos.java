@@ -31,7 +31,9 @@ public final class ProductDtos {
             // SERVICE products — see toProductRequest in products.ts.
             @PositiveOrZero Integer stock,
             // Null = the store-wide default. Applies to the product itself (or to nothing once it has variants).
-            @PositiveOrZero Integer lowStockThreshold) {}
+            @PositiveOrZero Integer lowStockThreshold,
+            // POS-16. Null = leave unchanged (older clients do not send it); "" = remove.
+            @Pattern(regexp = "^$|^[!-~]{1,64}$", message = "A barcode is 1-64 printable characters without spaces") String barcode) {}
 
     /**
      * For a product with variants, price/salePrice are the cheapest variant's ("from" pricing) and
@@ -47,5 +49,6 @@ public final class ProductDtos {
                                   List<VariantDtos.VariantResponse> variants,
                                   List<ModifierDtos.ModifierGroupResponse> modifierGroups,
                                   Integer lowStockThreshold,
-                                  List<ImageDtos.ImageResponse> images) {}
+                                  List<ImageDtos.ImageResponse> images,
+                                  String barcode) {}
 }

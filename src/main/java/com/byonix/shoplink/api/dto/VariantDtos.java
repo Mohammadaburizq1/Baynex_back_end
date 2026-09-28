@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
@@ -28,7 +29,7 @@ public final class VariantDtos {
      */
     public record VariantResponse(UUID id, String label, List<String> selection, String sku, BigDecimal price,
                                   BigDecimal salePrice, Integer stock, boolean inStock, boolean available,
-                                  int sortOrder, Integer lowStockThreshold) {}
+                                  int sortOrder, Integer lowStockThreshold, String barcode) {}
 
     public record VariantsResponse(List<OptionResponse> options, List<VariantResponse> variants) {}
 
@@ -56,7 +57,9 @@ public final class VariantDtos {
             @PositiveOrZero BigDecimal salePrice,
             @PositiveOrZero Integer stock,
             Boolean available,
-            @PositiveOrZero Integer lowStockThreshold) {}
+            @PositiveOrZero Integer lowStockThreshold,
+            // POS-16. Null = keep an existing variant's barcode; "" = remove.
+            @Pattern(regexp = "^$|^[!-~]{1,64}$", message = "A barcode is 1-64 printable characters without spaces") String barcode) {}
 
     /** Replace-all: what's listed is what the product ends up with. Empty options = no variants. */
     public record SaveVariantsRequest(

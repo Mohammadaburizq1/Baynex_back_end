@@ -59,6 +59,7 @@ public class PosDeviceService {
     private final MapperService mapper;
     private final ObjectMapper objectMapper;
     private final PosPriceBookService priceBooks;
+    private final com.byonix.shoplink.repository.OfferRepository offerRepository;
     private final SecureRandom secureRandom = new SecureRandom();
 
     // ── dashboard (store owner) ───────────────────────────────────────────────────────────────
@@ -176,17 +177,33 @@ public class PosDeviceService {
         List<Product> available = productRepository.findByStore_IdOrderBySortOrderAscNameEnAsc(store.getId()).stream()
                 .filter(Product::isAvailable).toList();
         var products = assembler.dashboard(available);
+        var offers = posOffers(store.getId());
         PosDtos.PosStore posStore = posStore(store);
-        String version = contentHash(posStore, categories, products);
+        String version = contentHash(posStore, categories, products, offers);
         Instant now = Instant.now();
         device.setLastSyncAt(now);
         // POS-09: remember exactly which prices this device now holds, so its offline sales can be
         // validated against them later (also when the catalog is confirmed unchanged).
-        priceBooks.recordDelivery(store.getId(), device.getId(), version, store.getCurrency(), products);
+        priceBooks.recordDelivery(store.getId(), device.getId(), version, store.getCurrency(), products, offers);
         if (version.equals(knownVersion)) {
-            return new PosDtos.CatalogResponse(version, true, now, null, null, null);
+            return new PosDtos.CatalogResponse(version, true, now, null, null, null, null);
         }
-        return new PosDtos.CatalogResponse(version, false, now, posStore, categories, products);
+        return new PosDtos.CatalogResponse(version, false, now, posStore, categories, products, offers);
+    }
+
+    /**
+     * POS-13: the store's discount codes a till could still apply — switched on and not yet expired
+     * (future ones included, so they start working offline on time). Same offers as the website.
+     */
+    private List<PosDtos.PosOffer> posOffers(UUID storeId) {
+        java.time.OffsetDateTime now = java.time.OffsetDateTime.now();
+        return offerRepository.findByStore_IdOrderByCreatedAtDesc(storeId).stream()
+                .filter(o -> o.isActive() && (o.getExpiresAt() == null || o.getExpiresAt().isAfter(now)))
+                .sorted(java.util.Comparator.comparing(o -> o.getCode().toUpperCase(Locale.ROOT)))
+                .map(o -> new PosDtos.PosOffer(o.getId(), o.getCode(), o.getDiscountType(), o.getDiscountValue(),
+                        o.getMinOrderAmount(), o.getMaxUses(), o.getMaxUses() != null && o.getTimesUsed() >= o.getMaxUses(),
+                        o.getStartsAt(), o.getExpiresAt(), o.isActive()))
+                .toList();
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────────────────────
@@ -231,7 +248,8 @@ public class PosDeviceService {
 
     static PosDtos.PosStore posStore(Store s) {
         return new PosDtos.PosStore(s.getId(), s.getSlug(), s.getName(), s.getCurrency(), s.getTimezone(), s.getLocale(),
-                s.getTemplateKey(), s.getCategorySlug(), s.getStatus(), s.isAcceptingOrders(), s.isPickupAvailable());
+                s.getTemplateKey(), s.getCategorySlug(), s.getStatus(), s.isAcceptingOrders(), s.isPickupAvailable(),
+                s.getPhone(), s.getAddress(), s.getCity());
     }
 
     private static PosDtos.DeviceResponse toResponse(PosDevice d) {

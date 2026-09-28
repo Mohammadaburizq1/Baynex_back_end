@@ -74,5 +74,5 @@ public final class OrderDtos {
                                 BigDecimal subtotal, BigDecimal deliveryFee,
                                 BigDecimal discount, String discountCode, BigDecimal total, String notes, Instant createdAt,
                                 List<OrderItemResponse> items, String currency, OrderSource source,
-                                String posReceiptNumber) {}
+                                String posReceiptNumber, String posStaffName) {}
 }

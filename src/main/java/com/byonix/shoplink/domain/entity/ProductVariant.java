@@ -42,6 +42,9 @@ public class ProductVariant extends BaseAuditable {
     @Column(length = 120)
     private String sku;
 
+    @Column(length = 64)
+    private String barcode;
+
     @Column(nullable = false, precision = 12, scale = 3)
     private BigDecimal price;
 

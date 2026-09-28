@@ -88,6 +88,12 @@ public class CustomerOrder extends BaseAuditable {
     private UUID posLocalOrderId;
     @Column(name = "pos_receipt_number", length = 40)
     private String posReceiptNumber;
+    // POS-14: the cashier who rang the sale up (id + name as it was at the till).
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pos_staff_id")
+    private User posStaff;
+    @Column(name = "pos_staff_name", length = 160)
+    private String posStaffName;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();

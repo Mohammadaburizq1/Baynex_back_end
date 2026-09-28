@@ -57,6 +57,14 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
                                              @Param("productId") UUID productId,
                                              @Param("skus") Collection<String> skus);
 
+    @Query("""
+            select v.barcode from ProductVariant v
+            where v.store.id = :storeId and v.product.id <> :productId and v.barcode in :barcodes
+            """)
+    List<String> findBarcodesUsedByOtherProducts(@Param("storeId") UUID storeId,
+                                                 @Param("productId") UUID productId,
+                                                 @Param("barcodes") Collection<String> barcodes);
+
     // Same atomic guarded UPDATE as ProductRepository.decrementStockIfAvailable: the DB serializes
     // concurrent updates to the row, so two simultaneous orders for the last unit can't both
     // succeed. 0 rows affected = not enough stock; the caller rolls the whole order back.

@@ -182,6 +182,10 @@ public class ProductVariantService {
             }
             variant.setOptionsKey(key);
             variant.setSku(blankToNull(vr.sku()));
+            // Null keeps an existing variant's barcode (editors that predate POS-16); "" removes it.
+            if (vr.barcode() != null) {
+                variant.setBarcode(blankToNull(vr.barcode()));
+            }
             variant.setPrice(vr.price());
             variant.setSalePrice(vr.salePrice());
             variant.setAvailable(vr.available() == null || vr.available());
@@ -190,6 +194,7 @@ public class ProductVariantService {
             variant.getOptionValues().clear();
             variant.getOptionValues().addAll(chosen);
         }
+        checkBarcodes(product, existingVariants.stream().filter(v -> usedVariantIds.contains(v.getId())).toList(), newVariants);
         variantRepository.deleteAll(existingVariants.stream().filter(v -> !usedVariantIds.contains(v.getId())).toList());
         variantRepository.saveAll(newVariants);
         variantRepository.flush();
@@ -310,6 +315,28 @@ public class ProductVariantService {
         taken.addAll(variantRepository.findSkusUsedByOtherProducts(storeId, product.getId(), lowerCaseSkus));
         if (!taken.isEmpty()) {
             throw new ConflictException("The SKU \"" + taken.get(0) + "\" is already used by another product in your store");
+        }
+    }
+
+    /** POS-16: one barcode per item in the store, across products and variants. */
+    private void checkBarcodes(Product product, List<ProductVariant> kept, List<ProductVariant> created) {
+        List<String> barcodes = new ArrayList<>();
+        for (ProductVariant v : kept) if (v.getBarcode() != null) barcodes.add(v.getBarcode());
+        for (ProductVariant v : created) if (v.getBarcode() != null) barcodes.add(v.getBarcode());
+        if (barcodes.isEmpty()) {
+            return;
+        }
+        if (barcodes.size() != new java.util.HashSet<>(barcodes).size()) {
+            throw new IllegalArgumentException("The same barcode is used by more than one variant");
+        }
+        if (product.getBarcode() != null && barcodes.contains(product.getBarcode())) {
+            throw new ConflictException("The barcode \"" + product.getBarcode() + "\" is already the product's own barcode");
+        }
+        UUID storeId = product.getStore().getId();
+        List<String> taken = new ArrayList<>(productRepository.findBarcodesUsedByOtherProducts(storeId, product.getId(), barcodes));
+        taken.addAll(variantRepository.findBarcodesUsedByOtherProducts(storeId, product.getId(), barcodes));
+        if (!taken.isEmpty()) {
+            throw new ConflictException("The barcode \"" + taken.get(0) + "\" is already used by another product in your store");
         }
     }
 

@@ -143,7 +143,8 @@ public class ProductAssembler {
                 p.getSortOrder(), storefront ? null : stock, inStock, p.isHasVariants(),
                 optionResponses(options), variantResponses(variants, storefront), modifierGroupResponses(groups),
                 storefront ? null : p.getLowStockThreshold(),
-                images.stream().map(i -> new ImageDtos.ImageResponse(i.getId(), i.getUrl(), i.getAltText())).toList());
+                images.stream().map(i -> new ImageDtos.ImageResponse(i.getId(), i.getUrl(), i.getAltText())).toList(),
+                storefront ? null : p.getBarcode());
     }
 
     private static List<ModifierDtos.ModifierGroupResponse> modifierGroupResponses(List<ProductModifierGroup> groups) {
@@ -177,7 +178,8 @@ public class ProductAssembler {
                 .map(v -> new VariantDtos.VariantResponse(v.getId(), v.label(),
                         v.orderedValues().stream().map(ov -> ov.getLabel()).toList(),
                         v.getSku(), v.getPrice(), v.getSalePrice(), storefront ? null : v.getStock(),
-                        v.inStock(), v.isAvailable(), v.getSortOrder(), storefront ? null : v.getLowStockThreshold()))
+                        v.inStock(), v.isAvailable(), v.getSortOrder(), storefront ? null : v.getLowStockThreshold(),
+                        storefront ? null : v.getBarcode()))
                 .toList();
     }
 }

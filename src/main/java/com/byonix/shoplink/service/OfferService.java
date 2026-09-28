@@ -92,15 +92,19 @@ public class OfferService {
         if (offer.getMinOrderAmount() != null && subtotal.compareTo(offer.getMinOrderAmount()) < 0) {
             throw new IllegalArgumentException("Order must be at least " + offer.getMinOrderAmount() + " to use this code");
         }
-        BigDecimal amount = offer.getDiscountType() == DiscountType.PERCENTAGE
-                ? subtotal.multiply(offer.getDiscountValue()).divide(BigDecimal.valueOf(100), 3, RoundingMode.HALF_UP)
-                : offer.getDiscountValue();
-        // Never discount more than the order is actually worth, regardless of what a fixed-amount
-        // code was configured for.
-        if (amount.compareTo(subtotal) > 0) {
-            amount = subtotal;
-        }
-        return new DiscountResult(offer, amount);
+        return new DiscountResult(offer, computeAmount(offer.getDiscountType(), offer.getDiscountValue(), subtotal));
+    }
+
+    /**
+     * The one discount arithmetic, shared by web checkout and POS uploads (POS-13): percentages are
+     * rounded to 3 decimals half-up, and a code never discounts more than the order is worth,
+     * regardless of what a fixed-amount code was configured for.
+     */
+    public static BigDecimal computeAmount(DiscountType type, BigDecimal value, BigDecimal subtotal) {
+        BigDecimal amount = type == DiscountType.PERCENTAGE
+                ? subtotal.multiply(value).divide(BigDecimal.valueOf(100), 3, RoundingMode.HALF_UP)
+                : value;
+        return amount.compareTo(subtotal) > 0 ? subtotal : amount;
     }
 
     public record DiscountResult(Offer offer, BigDecimal amount) {}

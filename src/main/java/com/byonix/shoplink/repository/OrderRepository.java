@@ -42,8 +42,9 @@ public interface OrderRepository extends JpaRepository<CustomerOrder, UUID> {
     // not what they typed on one specific past order; guest orders fall back to the order's own
     // snapshot fields since there's no profile to read. Cancelled orders are excluded entirely,
     // matching how DailyStoreSalesSyncService already treats cancellation as not-real-revenue.
-    // POS walk-in sales are left out: they carry no customer identity (customer sync is POS-12), and
-    // grouping them would invent one "customer" out of every counter sale.
+    // POS sales count when the cashier named a customer (POS-12: an account, or a contact with a phone
+    // or email); anonymous walk-in sales are left out — grouping them would invent one "customer" out
+    // of every counter sale.
     @Query(value = """
             SELECT
                 o.customer_id AS customerId,
@@ -58,7 +59,8 @@ public interface OrderRepository extends JpaRepository<CustomerOrder, UUID> {
             LEFT JOIN app_users u ON u.id = o.customer_id
             WHERE o.store_id = :storeId
               AND o.status <> 'CANCELLED'
-              AND o.source <> 'POS'
+              AND NOT (o.source = 'POS' AND o.customer_id IS NULL
+                       AND NULLIF(TRIM(o.customer_phone), '') IS NULL AND NULLIF(TRIM(o.customer_email), '') IS NULL)
             GROUP BY
                 COALESCE(CAST(o.customer_id AS VARCHAR(36)),
                          CONCAT('guest:', COALESCE(NULLIF(TRIM(o.customer_phone), ''), o.customer_email))),
@@ -66,6 +68,9 @@ public interface OrderRepository extends JpaRepository<CustomerOrder, UUID> {
             ORDER BY MAX(o.created_at) DESC
             """, nativeQuery = true)
     List<CustomerSummaryProjection> queryCustomerSummaries(@Param("storeId") UUID storeId);
+
+    /** POS-12: has this account a real (non-cancelled) order at this store, i.e. is it this store's customer? */
+    boolean existsByStore_IdAndCustomer_IdAndStatusNot(UUID storeId, UUID customerId, com.byonix.shoplink.domain.enums.OrderStatus status);
 
     // Reports page "Top Products" — no separate endpoint needed for "Revenue by Category" either,
     // since categoryName is included here and the frontend re-aggregates this same response by

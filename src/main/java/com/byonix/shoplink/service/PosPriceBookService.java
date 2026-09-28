@@ -1,6 +1,8 @@
 package com.byonix.shoplink.service;
 
 import com.byonix.shoplink.api.dto.ModifierDtos;
+import com.byonix.shoplink.api.dto.PosDtos;
+import com.byonix.shoplink.domain.enums.DiscountType;
 import com.byonix.shoplink.api.dto.ProductDtos;
 import com.byonix.shoplink.api.dto.VariantDtos;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +38,12 @@ public class PosPriceBookService {
     private final JdbcTemplate jdbc;
     private final ObjectMapper objectMapper;
 
-    public record PriceBook(String currency, List<BookProduct> products) {
+    /** offers is null in books recorded before POS-13 (no discount could be used with those). */
+    public record PriceBook(String currency, List<BookProduct> products, List<BookOffer> offers) {
+        Optional<BookOffer> offer(UUID id) {
+            return offers == null ? Optional.empty() : offers.stream().filter(o -> o.id().equals(id)).findFirst();
+        }
+
         Optional<BookProduct> product(UUID id) {
             return products.stream().filter(p -> p.id().equals(id)).findFirst();
         }
@@ -52,11 +59,18 @@ public class PosPriceBookService {
 
     public record BookOption(UUID id, String name, BigDecimal priceDelta, boolean available) {}
 
+    /** A discount code exactly as the device was given it. */
+    public record BookOffer(UUID id, String code, DiscountType discountType, BigDecimal discountValue,
+                            BigDecimal minOrderAmount, java.time.OffsetDateTime startsAt,
+                            java.time.OffsetDateTime expiresAt) {}
+
     /** Called for every catalog response, inside the catalog request's transaction. Idempotent. */
     @Transactional
     public void recordDelivery(UUID storeId, UUID deviceId, String catalogVersion, String currency,
-                               List<ProductDtos.ProductResponse> products) {
-        PriceBook book = new PriceBook(currency, products.stream().map(PosPriceBookService::bookProduct).toList());
+                               List<ProductDtos.ProductResponse> products, List<PosDtos.PosOffer> offers) {
+        PriceBook book = new PriceBook(currency, products.stream().map(PosPriceBookService::bookProduct).toList(),
+                offers.stream().filter(o -> !o.exhausted()).map(o -> new BookOffer(o.id(), o.code(), o.discountType(),
+                        o.discountValue(), o.minOrderAmount(), o.startsAt(), o.expiresAt())).toList());
         String content = objectMapper.writeValueAsString(book);
         String hash = sha256(content);
         jdbc.update("""

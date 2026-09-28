@@ -55,7 +55,7 @@ public class MapperService {
                 o.getPaymentMethod(), o.getPaymentStatus(), o.getStatus(), o.getSubtotal(), o.getDeliveryFee(), o.getDiscount(),
                 o.getOffer() == null ? null : o.getOffer().getCode(), o.getTotal(),
                 o.getNotes(), o.getCreatedAt(), o.getItems().stream().map(this::orderItem).toList(), o.getCurrency(),
-                o.getSource(), o.getPosReceiptNumber());
+                o.getSource(), o.getPosReceiptNumber(), o.getPosStaffName());
     }
 
     public OrderDtos.OrderItemResponse orderItem(OrderItem i) {

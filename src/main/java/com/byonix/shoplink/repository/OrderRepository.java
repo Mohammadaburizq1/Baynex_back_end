@@ -14,6 +14,9 @@ import java.util.UUID;
 public interface OrderRepository extends JpaRepository<CustomerOrder, UUID> {
     List<CustomerOrder> findByStore_IdOrderByCreatedAtDesc(UUID storeId);
     Optional<CustomerOrder> findByIdAndStore_Id(UUID id, UUID storeId);
+
+    /** POS-23: the sale a till made under this local id (e.g. the replacement sale of an exchange). */
+    Optional<CustomerOrder> findByPosDevice_IdAndPosLocalOrderId(UUID deviceId, UUID posLocalOrderId);
     List<CustomerOrder> findByCustomer_Id(UUID customerId, org.springframework.data.domain.Pageable pageable);
     Optional<CustomerOrder> findByIdAndCustomer_Id(UUID id, UUID customerId);
     Optional<CustomerOrder> findByStore_SlugAndOrderCodeIgnoreCaseAndCustomerEmailIgnoreCase(

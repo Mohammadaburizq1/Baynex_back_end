@@ -143,7 +143,12 @@ public class PosDtos {
                                    @Valid SaleCustomer customer,
                                    @Valid SaleOffer offer,
                                    @Valid SaleStaff staff,
-                                   @Size(max = 20) List<@Valid SaleOverride> overrides) {}
+                                   @Size(max = 20) List<@Valid SaleOverride> overrides,
+                                   // POS-23: the replacement sale of an exchange (optional).
+                                   @Valid SaleExchange exchange) {}
+
+    /** POS-23: part of this sale's total was paid by goods returned in the same exchange. */
+    public record SaleExchange(@NotNull UUID localReturnId, @NotNull @jakarta.validation.constraints.Positive BigDecimal credit) {}
 
     /** customerId = an account from this store's customer list; otherwise a contact typed at the till. */
     public record SaleCustomer(UUID customerId, @Size(max = 160) String name, @Size(max = 40) String phone,
@@ -174,6 +179,55 @@ public class PosDtos {
     public record SyncOrderResponse(UUID operationId, boolean replayed, PosSyncOperationStatus status, UUID orderId,
                                     String orderCode, BigDecimal total, String currency, Instant syncedAt,
                                     List<StockLevel> inventory, List<SyncConflict> conflicts) {}
+
+    // ── POS-23: returns and exchanges ────────────────────────────────────────────────────────────
+
+    /**
+     * A return (or the return half of an exchange) made at a till, possibly offline. The store is the
+     * authenticated device's. Every amount is a claim the server recomputes from the original sale.
+     */
+    public record SyncReturnRequest(@NotNull UUID operationId, @NotNull UUID originDeviceId, @NotNull UUID localReturnId,
+                                    @NotBlank @Size(max = 40) String returnNumber,
+                                    @NotNull com.byonix.shoplink.domain.entity.PosReturn.Kind kind,
+                                    @NotNull UUID originalOrderId,
+                                    @NotNull Instant returnedAt,
+                                    @NotBlank @Size(min = 3, max = 3) String currency,
+                                    @NotNull com.byonix.shoplink.domain.entity.PosReturn.Reason reason,
+                                    @Size(max = 300) String reasonNote,
+                                    @NotNull BigDecimal refundTotal,
+                                    @NotNull BigDecimal exchangeCredit,
+                                    @NotNull BigDecimal refundPaidOut,
+                                    com.byonix.shoplink.domain.entity.PosReturn.RefundMethod refundMethod,
+                                    UUID exchangeLocalOrderId,
+                                    @NotEmpty @Size(max = 200) List<@Valid SyncReturnItem> items,
+                                    @Valid SaleStaff staff,
+                                    @Size(max = 20) List<@Valid SaleOverride> overrides) {}
+
+    /**
+     * One returned line. lineNo = the till's line number on the original sale; returnedBefore = units of
+     * that line the till knew were already returned (the refund is priced from it, see PosReturnPolicy).
+     */
+    public record SyncReturnItem(@NotNull @Min(1) Integer lineNo, @NotNull UUID productId, UUID variantId,
+                                 @NotNull @Min(1) @Max(10000) Integer quantity,
+                                 @NotNull @Min(0) @Max(10000) Integer returnedBefore,
+                                 @NotNull BigDecimal refundAmount,
+                                 @NotNull com.byonix.shoplink.domain.entity.PosReturnItem.Disposition disposition) {}
+
+    public record ReturnItemResult(Integer lineNo, int requestedQuantity, int acceptedQuantity, BigDecimal refundAmount,
+                                   int restockedQuantity) {}
+
+    /** replayed = this operation id was already applied; nothing was refunded or restocked again. */
+    public record SyncReturnResponse(UUID operationId, boolean replayed, PosSyncOperationStatus status, UUID returnId,
+                                     String originalOrderCode, BigDecimal requestedRefundTotal, BigDecimal refundTotal,
+                                     String currency, Instant syncedAt, List<ReturnItemResult> items,
+                                     List<StockLevel> inventory, List<SyncConflict> conflicts) {}
+
+    /** Dashboard view of a return (store's own only). */
+    public record ReturnSummary(UUID id, String returnNumber, String kind, UUID originalOrderId, String originalOrderCode,
+                                String originalReceiptNumber, String customerName, String staffName, String managerName,
+                                String reason, String reasonNote, String refundMethod, BigDecimal requestedRefundTotal,
+                                BigDecimal refundTotal, BigDecimal exchangeCredit, BigDecimal refundPaidOut, String currency,
+                                String status, UUID deviceId, Instant returnedAt, List<ReturnItemResult> items) {}
 
     // ── dashboard: conflicts to review ────────────────────────────────────────────────────────
 

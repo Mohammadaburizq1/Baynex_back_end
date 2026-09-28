@@ -26,5 +26,15 @@ public enum PosSyncConflictType {
     /** The cashier is no longer staff of this store (or unknown); the sale keeps the name it showed. */
     STAFF_UNAVAILABLE,
     /** A manager approval on this sale could not be confirmed against the current permission grid. */
-    OVERRIDE_UNVERIFIED
+    OVERRIDE_UNVERIFIED,
+    /**
+     * POS-23: a return asked for more units of a line than were still returnable (another till, or an
+     * earlier return, already took them back). Only the remaining units were accepted; the excess
+     * refund the till reported is recorded for the manager, never booked twice.
+     */
+    RETURN_QUANTITY_EXCEEDED,
+    /** POS-23: a return that needed a POS manager's approval arrived without a confirmable one. Kept. */
+    RETURN_APPROVAL_MISSING,
+    /** POS-23: the exchange credit on a return and on its replacement sale disagree. Both are kept. */
+    EXCHANGE_MISMATCH
 }

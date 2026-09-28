@@ -172,7 +172,9 @@ public class PosOrderSyncService {
         Map<String, PosDtos.StockLevel> touched = new LinkedHashMap<>();
         BigDecimal subtotal = BigDecimal.ZERO;
 
+        int lineNo = 0;
         for (Line line : lines) {
+            lineNo++;
             Product product = productRepository.findByIdForUpdate(line.product().id())
                     .filter(p -> p.getStore().getId().equals(store.getId()))
                     .orElse(null);
@@ -244,6 +246,8 @@ public class PosOrderSyncService {
             item.setUnitPrice(line.unitPrice());
             item.setQuantity(line.quantity());
             item.setTotal(line.lineTotal());
+            // POS-23: returns name the line they reverse by the till's line number (items keep payload order).
+            item.setPosLineNo(lineNo);
             for (SelectedAddOn addOn : line.addOns()) {
                 OrderItemModifier m = new OrderItemModifier();
                 m.setOrderItem(item);
@@ -277,6 +281,15 @@ public class PosOrderSyncService {
         order.setDeliveryFee(BigDecimal.ZERO);
         order.setDiscount(discount);
         order.setTotal(subtotal.subtract(discount));
+        if (r.exchange() != null) {
+            // POS-23: the replacement sale of an exchange; its credit is checked against the return
+            // when both are on the server (PosReturnSyncService), never used to change this sale.
+            if (r.exchange().credit().compareTo(order.getTotal()) > 0) {
+                throw new PosSyncRejectedException("EXCHANGE_INVALID", "The exchange credit is larger than the sale it paid for");
+            }
+            order.setPosExchangeCredit(r.exchange().credit());
+            order.setPosExchangeLocalReturnId(r.exchange().localReturnId());
+        }
         order.setNotes(r.note() == null || r.note().isBlank() ? null : r.note().trim());
         order.setSource(OrderSource.POS);
         order.setPosDevice(origin);
@@ -674,6 +687,7 @@ public class PosOrderSyncService {
                 b.append("|override:").append(o.action()).append(',').append(o.managerId()).append(',').append(o.approvedAt());
             }
         }
+        if (r.exchange() != null) b.append("|exchange:").append(r.exchange().localReturnId()).append(',').append(plain(r.exchange().credit()));
         for (PosDtos.SyncOrderItem i : r.items()) {
             b.append("|item:").append(i.productId()).append(',').append(i.variantId()).append(',')
                     .append(i.modifierOptionIds() == null ? "" : i.modifierOptionIds().stream().map(UUID::toString).sorted().toList())

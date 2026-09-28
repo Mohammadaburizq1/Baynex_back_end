@@ -19,6 +19,8 @@ import java.util.UUID;
 @Table(name = "pos_sync_operations")
 public class PosSyncOperation implements org.springframework.data.domain.Persistable<UUID> {
     public static final String TYPE_ORDER = "ORDER_CREATE";
+    /** POS-23: a return or exchange; entity_id = the till's local return id. */
+    public static final String TYPE_RETURN = "RETURN_CREATE";
 
     @Id
     @Column(name = "operation_id")

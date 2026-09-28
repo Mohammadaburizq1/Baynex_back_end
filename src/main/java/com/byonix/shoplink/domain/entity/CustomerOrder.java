@@ -94,6 +94,11 @@ public class CustomerOrder extends BaseAuditable {
     private User posStaff;
     @Column(name = "pos_staff_name", length = 160)
     private String posStaffName;
+    /** POS-23: an exchange sale — how much of its total was paid by the returned goods' value. */
+    @Column(name = "pos_exchange_credit", precision = 12, scale = 3)
+    private BigDecimal posExchangeCredit;
+    @Column(name = "pos_exchange_local_return_id")
+    private UUID posExchangeLocalReturnId;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();

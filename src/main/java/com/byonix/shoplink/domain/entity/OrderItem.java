@@ -45,6 +45,9 @@ public class OrderItem extends BaseAuditable {
     private int quantity;
     @Column(nullable = false, precision = 12, scale = 3)
     private BigDecimal total;
+    /** POS-23: the till's line number (1…n) of a POS sale; null for web orders and pre-V39 POS orders. */
+    @Column(name = "pos_line_no")
+    private Integer posLineNo;
 
     // The add-ons chosen for this line. unitPrice above already includes their deltas.
     @OneToMany(mappedBy = "orderItem", cascade = CascadeType.ALL, orphanRemoval = true)

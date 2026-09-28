@@ -21,6 +21,7 @@ public class PosController {
     private final PosOrderSyncService orderSyncService;
     private final com.byonix.shoplink.service.PosCustomerService customerService;
     private final com.byonix.shoplink.service.PosStaffService staffService;
+    private final com.byonix.shoplink.service.PosReturnSyncService returnSyncService;
 
     @PostMapping("/activate")
     public ApiResponse<PosDtos.ActivationResponse> activate(@Valid @RequestBody PosDtos.ActivateRequest request,
@@ -62,5 +63,16 @@ public class PosController {
     public ApiResponse<PosDtos.SyncOrderResponse> syncOrder(@AuthenticationPrincipal PosDevicePrincipal device,
                                                             @Valid @RequestBody PosDtos.SyncOrderRequest request) {
         return ApiResponse.ok(orderSyncService.sync(device, request));
+    }
+
+    /**
+     * POS-23: uploads one return or exchange made on the device (possibly offline). Idempotent on
+     * operationId. The store is the authenticated device's store; the original sale must be one of its
+     * POS orders, and every refund amount is recomputed from that sale.
+     */
+    @PostMapping("/returns/sync")
+    public ApiResponse<PosDtos.SyncReturnResponse> syncReturn(@AuthenticationPrincipal PosDevicePrincipal device,
+                                                              @Valid @RequestBody PosDtos.SyncReturnRequest request) {
+        return ApiResponse.ok(returnSyncService.sync(device, request));
     }
 }

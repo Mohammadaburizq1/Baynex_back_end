@@ -255,7 +255,7 @@ public class PosDeviceService {
     private static PosDtos.DeviceResponse toResponse(PosDevice d) {
         return new PosDtos.DeviceResponse(d.getId(), d.getStore().getId(), d.getName(), d.getStatus(), d.getPlatform(),
                 d.getAppVersion(), d.getActivationCodeExpiresAt(), d.getActivatedAt(), d.getLastSeenAt(), d.getLastSyncAt(),
-                d.getRevokedAt(), d.getCreatedAt());
+                d.getRevokedAt(), d.getCreatedAt(), d.getCredentialExpiresAt());
     }
 
     private static String blankToNull(String value) {

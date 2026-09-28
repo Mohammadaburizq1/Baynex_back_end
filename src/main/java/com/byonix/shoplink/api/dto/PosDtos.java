@@ -25,9 +25,14 @@ import java.util.UUID;
 public class PosDtos {
     public record CreateDeviceRequest(@NotNull UUID storeId, @NotBlank @Size(max = 80) String name) {}
 
+    /**
+     * credentialExpiresAt: when the device's sliding idle credential lapses (null until activated and
+     * after revocation). A timestamp only — the credential and code hashes are never part of this.
+     */
     public record DeviceResponse(UUID id, UUID storeId, String name, PosDeviceStatus status, String platform,
                                  String appVersion, Instant activationCodeExpiresAt, Instant activatedAt,
-                                 Instant lastSeenAt, Instant lastSyncAt, Instant revokedAt, Instant createdAt) {}
+                                 Instant lastSeenAt, Instant lastSyncAt, Instant revokedAt, Instant createdAt,
+                                 Instant credentialExpiresAt) {}
 
     /** The only response that ever carries the plaintext activation code. */
     public record IssuedActivationCode(DeviceResponse device, String activationCode, Instant expiresAt) {}

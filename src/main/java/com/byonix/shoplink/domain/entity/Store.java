@@ -77,6 +77,9 @@ public class Store extends BaseAuditable {
     private String currency = "JOD";
     @Column(nullable = false, length = 64)
     private String timezone = "UTC";
+    /** POS-26: restaurant mode on the POS. Null = decided by the business type (see RestaurantSetupService). */
+    @Column(name = "pos_restaurant_mode")
+    private Boolean posRestaurantMode;
     @Column(nullable = false, length = 10)
     private String locale = "en";
     @Column(name = "accepting_orders", nullable = false)

@@ -65,7 +65,7 @@ public class PosSyncConflictService {
         return response(conflict, ignored -> deviceName);
     }
 
-    private static PosDtos.ConflictResponse response(PosSyncConflict c, Function<UUID, String> deviceName) {
+    static PosDtos.ConflictResponse response(PosSyncConflict c, Function<UUID, String> deviceName) {
         return new PosDtos.ConflictResponse(c.getId(), c.getStoreId(), c.getDeviceId(),
                 c.getDeviceId() == null ? null : deviceName.apply(c.getDeviceId()), c.getOrderId(), c.getOrderCode(),
                 c.getReceiptNumber(), c.getType(), c.getProductId(), c.getVariantId(), c.getItemName(),

@@ -1,0 +1,152 @@
+package com.byonix.shoplink.api.dto;
+
+import com.byonix.shoplink.api.dto.PosDtos.SaleCustomer;
+import com.byonix.shoplink.api.dto.PosDtos.SaleOverride;
+import com.byonix.shoplink.api.dto.PosDtos.SaleStaff;
+import com.byonix.shoplink.domain.entity.PosOrderPayment;
+import com.byonix.shoplink.domain.enums.PosSyncOperationStatus;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+/** POS-26 restaurant mode: setup (areas, tables), operations uploaded from tills, order state. */
+public class RestaurantDtos {
+    // ── setup ─────────────────────────────────────────────────────────────────────────────────
+
+    public record Area(UUID id, String name, int sortOrder, boolean active) {}
+
+    public record Table(UUID id, UUID areaId, String name, Integer capacity, int sortOrder, boolean active) {}
+
+    public record Zone(UUID id, String name, BigDecimal deliveryFee, BigDecimal minOrder) {}
+
+    /** What a till needs to run restaurant mode offline. Active and inactive rows (history shows old tables). */
+    public record PosSetup(boolean restaurantMode, List<Area> areas, List<Table> tables, List<Zone> deliveryZones, Instant serverTime,
+                           /** POS-27: kitchen stations (a kitchen screen shows one, several or all). */
+                           List<KitchenDtos.Station> kitchenStations) {}
+
+    /** restaurantMode: the merchant's explicit choice (null = follow the business type). */
+    public record Settings(Boolean restaurantMode, boolean effective, boolean byBusinessType) {}
+
+    public record UpdateSettings(Boolean restaurantMode) {}
+
+    public record AreaRequest(@NotBlank @Size(max = 80) String name, Integer sortOrder, Boolean active) {}
+
+    public record TableRequest(@NotNull UUID areaId, @NotBlank @Size(max = 40) String name,
+                               @Min(1) @Max(200) Integer capacity, Integer sortOrder, Boolean active) {}
+
+    /** A restaurant order of one table, for its history. */
+    public record TableOrder(UUID id, String orderCode, String ticketNumber, String orderType, String status, Integer guestCount,
+                             String waiterName, BigDecimal total, BigDecimal paid, Instant openedAt, Instant closedAt, UUID tableId) {}
+
+    // ── operations from the till ───────────────────────────────────────────────────────────────
+
+    public enum OpType {
+        OPEN, ADD_ITEMS, VOID_LINE, UPDATE_LINE, UPDATE_DETAILS, MOVE_TABLE, MERGE, TRANSFER_ITEMS,
+        APPLY_DISCOUNT, REMOVE_DISCOUNT, ADD_PAYMENT, CLOSE
+    }
+
+    /**
+     * One change to a restaurant order, made at a till (possibly offline). orderId is the id the opening
+     * till generated for the order; every till uses it. Only the payload matching {@code type} is read.
+     */
+    public record OpRequest(@NotNull UUID operationId, @NotNull UUID originDeviceId, @NotNull OpType type, @NotNull UUID orderId,
+                            @NotNull Instant occurredAt, @NotNull @Valid SaleStaff staff,
+                            @Size(max = 5) List<@Valid SaleOverride> overrides,
+                            /** The order version the till had when it made the change (informational). */
+                            Integer baseVersion,
+                            @Valid OpenPayload open,
+                            @Size(max = 100) List<@Valid NewLine> items,
+                            @Size(max = 64) String catalogVersion,
+                            @Valid VoidPayload voidLine,
+                            @Valid LineUpdate lineUpdate,
+                            @Valid DetailsPayload details,
+                            @Valid MovePayload move,
+                            @Valid MergePayload merge,
+                            @Valid TransferPayload transfer,
+                            @Valid DiscountPayload discount,
+                            @Valid PaymentPayload payment) {}
+
+    public record OpenPayload(@NotNull @jakarta.validation.constraints.Pattern(regexp = "DINE_IN|TAKEAWAY|DELIVERY") String orderType,
+                              UUID tableId, @Min(1) @Max(500) Integer guestCount, @Valid SaleStaff waiter,
+                              @NotBlank @Size(max = 40) String receiptNumber, @Size(max = 20) String ticketNumber,
+                              @Valid SaleCustomer customer, @Size(max = 160) String pickupName,
+                              @Size(max = 600) String deliveryAddress, UUID deliveryZoneId, BigDecimal deliveryFee,
+                              @Size(max = 500) String note, @NotBlank @Size(min = 3, max = 3) String currency) {}
+
+    /** A new line; lineUid is generated by the till and is the line's identity on every till. */
+    public record NewLine(@NotNull UUID lineUid, @NotNull UUID productId, UUID variantId,
+                          @Size(max = 30) List<@NotNull UUID> modifierOptionIds,
+                          @NotNull @Min(1) @Max(10000) Integer quantity, @NotNull BigDecimal unitPrice, @NotNull BigDecimal lineTotal,
+                          @Size(max = 300) String note, @jakarta.validation.constraints.Pattern(regexp = "STARTER|MAIN|DESSERT|DRINK") String course) {}
+
+    public enum VoidReason { CUSTOMER_CHANGED, ENTRY_ERROR, KITCHEN_ERROR, OUT_OF_STOCK, OTHER }
+
+    /** baseLineVersion: the line's version the till saw; a newer one on the server is a conflict to review. */
+    public record VoidPayload(@NotNull UUID lineUid, @NotNull @Min(1) Integer quantity, @NotNull VoidReason reason,
+                              @Size(max = 300) String note, @NotNull Boolean restock, Integer baseLineVersion) {}
+
+    public record LineUpdate(@NotNull UUID lineUid, @Size(max = 300) String note,
+                             @jakarta.validation.constraints.Pattern(regexp = "STARTER|MAIN|DESSERT|DRINK") String course,
+                             Integer baseLineVersion) {}
+
+    /** Null fields are unchanged. */
+    public record DetailsPayload(@Min(1) @Max(500) Integer guestCount, @Valid SaleStaff waiter, @Size(max = 500) String note,
+                                 @Valid SaleCustomer customer, @Size(max = 160) String pickupName,
+                                 @Size(max = 600) String deliveryAddress) {}
+
+    public record MovePayload(@NotNull UUID fromTableId, @NotNull UUID toTableId) {}
+
+    /** The order sourceOrderId is merged into the op's order (its lines, payments and discount basis move). */
+    public record MergePayload(@NotNull UUID sourceOrderId) {}
+
+    /**
+     * Moves units of lines to another order: an existing one (targetOrderId), or one opened by this
+     * very operation on a free table (openTarget). A moved part becomes a new line (newLineUid) there,
+     * with the original line's price snapshot.
+     */
+    public record TransferPayload(@NotNull UUID targetOrderId, @Valid OpenPayload openTarget,
+                                  @NotEmpty @Size(max = 100) List<@Valid TransferLine> lines) {}
+
+    public record TransferLine(@NotNull UUID lineUid, @NotNull @Min(1) Integer quantity, @NotNull UUID newLineUid) {}
+
+    public record DiscountPayload(@NotNull UUID offerId, @NotBlank @Size(max = 40) String code, @NotBlank @Size(max = 64) String catalogVersion) {}
+
+    public record PaymentPayload(@NotNull UUID paymentId, @NotNull @Positive BigDecimal amount, @NotNull PosOrderPayment.Method method,
+                                 @NotNull PosOrderPayment.SplitMode splitMode, @Size(max = 4000) String allocation, UUID shiftId) {}
+
+    // ── order state (server truth, returned after every operation and by the state pull) ──────
+
+    public record Modifier(String groupName, String name, BigDecimal priceDelta) {}
+
+    public record LineState(UUID lineUid, Integer lineNo, UUID productId, UUID variantId, String name, String variantLabel, String sku,
+                            List<Modifier> modifiers, BigDecimal unitPrice, int quantity, int voidedQuantity, BigDecimal lineTotal,
+                            String note, String course, String addedByName, Instant addedAt, int lineVersion, Integer sentVersion) {}
+
+    public record PaymentState(UUID paymentId, BigDecimal amount, String method, String splitMode, String allocation, String staffName,
+                               UUID shiftId, UUID deviceId, Instant paidAt) {}
+
+    /** status: OPEN | COMPLETED | MERGED. */
+    public record OrderState(UUID orderId, UUID serverOrderId, String orderCode, String receiptNumber, String ticketNumber, String orderType,
+                             String status, int version, UUID tableId, Integer guestCount, UUID waiterId, String waiterName,
+                             String originalWaiterName, UUID customerId, String customerName, String customerPhone, String customerEmail,
+                             String deliveryAddress, String pickupName, UUID deliveryZoneId, String note, String currency,
+                             BigDecimal subtotal, BigDecimal discount, BigDecimal deliveryFee, BigDecimal total, BigDecimal paid,
+                             BigDecimal remaining, UUID offerId, String offerCode, UUID openedByDeviceId, Instant openedAt, Instant closedAt,
+                             UUID mergedIntoOrderId, List<LineState> lines, List<PaymentState> payments) {}
+
+    public record OpResponse(UUID operationId, boolean replayed, PosSyncOperationStatus status, OrderState order, OrderState otherOrder,
+                             List<PosDtos.StockLevel> inventory, List<PosDtos.SyncConflict> conflicts) {}
+
+    /** Open restaurant orders of the store plus every restaurant order changed since the till's last pull. */
+    public record StateResponse(Instant serverTime, List<OrderState> orders) {}
+}

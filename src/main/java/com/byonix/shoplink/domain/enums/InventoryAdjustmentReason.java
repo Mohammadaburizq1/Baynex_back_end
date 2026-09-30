@@ -7,7 +7,9 @@ public enum InventoryAdjustmentReason {
     /** POS-23: returned at a till and put back on sale. */
     POS_RETURN,
     /** POS-23: returned at a till as part of an exchange and put back on sale. */
-    POS_EXCHANGE_RETURN;
+    POS_EXCHANGE_RETURN,
+    /** POS-26: a restaurant line voided before it was served, put back on sale. */
+    POS_VOID;
 
     public boolean isManual() {
         return this == RESTOCK || this == CORRECTION || this == DAMAGED || this == RETURNED;

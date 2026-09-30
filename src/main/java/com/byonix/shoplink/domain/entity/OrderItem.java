@@ -49,6 +49,29 @@ public class OrderItem extends BaseAuditable {
     @Column(name = "pos_line_no")
     private Integer posLineNo;
 
+    // ── POS-26 restaurant lines. quantity/total above are what is still ordered (after voids). ──
+    @Column(name = "pos_line_uid")
+    private UUID posLineUid;
+    @Column(name = "item_note", length = 300)
+    private String itemNote;
+    /** STARTER | MAIN | DESSERT | DRINK (optional; foundation for the kitchen, POS-27). */
+    @Column(length = 10)
+    private String course;
+    @Column(name = "voided_quantity", nullable = false)
+    private int voidedQuantity;
+    @Column(name = "added_by_id")
+    private UUID addedById;
+    @Column(name = "added_by_name", length = 160)
+    private String addedByName;
+    @Column(name = "added_at")
+    private java.time.Instant addedAt;
+    @Column(name = "added_device_id")
+    private UUID addedDeviceId;
+    @Column(name = "sent_version")
+    private Integer sentVersion;
+    @Column(name = "line_version", nullable = false)
+    private int lineVersion = 1;
+
     // The add-ons chosen for this line. unitPrice above already includes their deltas.
     @OneToMany(mappedBy = "orderItem", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItemModifier> modifiers = new ArrayList<>();

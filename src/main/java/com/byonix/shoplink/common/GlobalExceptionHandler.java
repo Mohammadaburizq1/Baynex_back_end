@@ -87,7 +87,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     ResponseEntity<ApiResponse<Void>> uploadTooLarge() {
-        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(ApiResponse.error("Images can be up to 5 MB"));
+        // Only past the multipart limit (50 MB per file): each endpoint answers its own smaller limit itself.
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(ApiResponse.error("The file is too large to upload"));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

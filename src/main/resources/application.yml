@@ -37,8 +37,10 @@ spring:
     default-property-inclusion: non_null
   servlet:
     multipart:
-      max-file-size: 5MB
-      max-request-size: 6MB
+      # A single part: the product-import pictures ZIP is the largest (50 MB). Every endpoint still
+      # enforces its own limit (picture uploads 5 MB, spreadsheets 5 MB, see MediaService / ProductImportService).
+      max-file-size: 50MB
+      max-request-size: 56MB
   mail:
     host: ${MAIL_HOST:}
     port: ${MAIL_PORT:587}

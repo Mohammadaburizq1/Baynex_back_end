@@ -99,6 +99,40 @@ public class CustomerOrder extends BaseAuditable {
     private BigDecimal posExchangeCredit;
     @Column(name = "pos_exchange_local_return_id")
     private UUID posExchangeLocalReturnId;
+    /** POS-24: the till shift this sale was rung up in (the till's shift id; no FK — see V41). */
+    @Column(name = "pos_shift_id")
+    private UUID posShiftId;
+
+    // ── POS-26 restaurant orders (null on retail POS sales and web orders) ──
+    /** DINE_IN | TAKEAWAY | DELIVERY. */
+    @Column(name = "pos_order_type", length = 10)
+    private String posOrderType;
+    @Column(name = "restaurant_table_id")
+    private UUID restaurantTableId;
+    @Column(name = "guest_count")
+    private Integer guestCount;
+    @Column(name = "waiter_id")
+    private UUID waiterId;
+    @Column(name = "waiter_name", length = 160)
+    private String waiterName;
+    @Column(name = "original_waiter_id")
+    private UUID originalWaiterId;
+    @Column(name = "original_waiter_name", length = 160)
+    private String originalWaiterName;
+    @Column(name = "pos_ticket_number", length = 20)
+    private String posTicketNumber;
+    @Column(name = "pickup_name", length = 160)
+    private String pickupName;
+    @Column(name = "delivery_zone_id")
+    private UUID deliveryZoneId;
+    @Column(name = "pos_order_version", nullable = false)
+    private int posOrderVersion;
+    @Column(name = "pos_opened_at")
+    private java.time.Instant posOpenedAt;
+    @Column(name = "pos_closed_at")
+    private java.time.Instant posClosedAt;
+    @Column(name = "pos_merged_into_order_id")
+    private UUID posMergedIntoOrderId;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();

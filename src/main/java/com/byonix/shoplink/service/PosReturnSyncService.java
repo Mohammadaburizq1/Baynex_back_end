@@ -98,6 +98,7 @@ public class PosReturnSyncService {
     private final CurrentUserService currentUser;
     private final StoreService storeService;
     private final JdbcTemplate jdbc;
+    private final com.byonix.shoplink.repository.PosShiftRepository shiftRepository;
 
     public PosDtos.SyncReturnResponse sync(PosDevicePrincipal principal, PosDtos.SyncReturnRequest request) {
         try {
@@ -136,6 +137,11 @@ public class PosReturnSyncService {
                 .filter(o -> o.getStore().getId().equals(store.getId()) && o.getSource() == OrderSource.POS)
                 .orElseThrow(() -> new PosSyncRejectedException("RETURN_ORDER_UNKNOWN",
                         "The sale being returned is not a POS sale of this store"));
+        // POS-26: an open restaurant order is not a sale yet; its items are voided at the table, not returned.
+        if (order.getPosOrderType() != null && order.getStatus() != com.byonix.shoplink.domain.enums.OrderStatus.DELIVERED) {
+            throw new PosSyncRejectedException("RETURN_ORDER_OPEN",
+                    "This restaurant order is not settled. Void items at the table instead of returning them.");
+        }
         if (!order.getCurrency().equalsIgnoreCase(r.currency())) {
             throw new PosSyncRejectedException("CURRENCY_MISMATCH", "The return's currency does not match the original sale");
         }
@@ -153,6 +159,7 @@ public class PosReturnSyncService {
         if (r.refundPaidOut().signum() > 0 && r.refundMethod() == null) {
             throw new PosSyncRejectedException("RETURN_INVALID", "A refund paid out needs a refund method");
         }
+        PosShiftService.checkShiftLink(shiftRepository, r.shiftId(), store.getId(), origin.getId());
 
         List<OrderItem> orderLines = linesInTillOrder(order);
         List<BigDecimal> shares = PosReturnPolicy.discountShares(orderLines.stream().map(OrderItem::getTotal).toList(), order.getDiscount());
@@ -350,6 +357,7 @@ public class PosReturnSyncService {
         ret.setRefundPaidOut(r.refundPaidOut());
         ret.setRefundMethod(r.refundPaidOut().signum() > 0 ? r.refundMethod() : null);
         ret.setExchangeLocalOrderId(r.exchangeLocalOrderId());
+        ret.setShiftId(r.shiftId());
         ret.setStatus((conflicts.isEmpty() ? PosSyncOperationStatus.SYNCED : PosSyncOperationStatus.SYNCED_WITH_CONFLICTS).name());
         ret.setReturnedAt(returnedAt);
         ret.setCreatedAt(now);
@@ -552,6 +560,7 @@ public class PosReturnSyncService {
                 b.append("|override:").append(o.action()).append(',').append(o.managerId()).append(',').append(o.approvedAt());
             }
         }
+        if (r.shiftId() != null) b.append("|shift:").append(r.shiftId());
         for (PosDtos.SyncReturnItem i : r.items()) {
             b.append("|item:").append(i.lineNo()).append(',').append(i.productId()).append(',').append(i.variantId()).append(',')
                     .append(i.quantity()).append(',').append(i.returnedBefore()).append(',').append(plain(i.refundAmount()))

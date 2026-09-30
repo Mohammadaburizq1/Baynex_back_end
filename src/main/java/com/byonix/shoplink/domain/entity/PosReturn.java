@@ -109,6 +109,10 @@ public class PosReturn {
     @Column(name = "exchange_local_order_id")
     private UUID exchangeLocalOrderId;
 
+    /** POS-24: the till shift this return was made in (the till's shift id; no FK — see V41). */
+    @Column(name = "shift_id")
+    private UUID shiftId;
+
     /** SYNCED | SYNCED_WITH_CONFLICTS (as the operation). */
     @Column(nullable = false, length = 30)
     private String status;

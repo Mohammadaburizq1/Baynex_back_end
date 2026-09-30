@@ -302,6 +302,11 @@ public class OrderService {
     public OrderDtos.OrderResponse updateStatus(UUID id, OrderDtos.StatusUpdateRequest request) {
         CustomerOrder order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order not found"));
         currentUser.ensureSectionAccess(order.getStore(), DashboardSection.ORDERS, PermissionLevel.EDIT);
+        // POS-26: an open restaurant order is run from the tills (items, payments, close); changing its
+        // status or payment here would free a table with an unpaid bill.
+        if (order.getPosOrderType() != null && order.getStatus() == OrderStatus.CONFIRMED) {
+            throw new com.byonix.shoplink.common.ConflictException("This restaurant order is still open at the tills. Settle it on the POS.");
+        }
         OrderStatus previous = order.getStatus();
         if (request.status() != previous) {
             validateTransition(previous, request.status());
@@ -387,6 +392,11 @@ public class OrderService {
     public OrderDtos.OrderResponse updatePaymentStatus(UUID id, OrderDtos.PaymentStatusUpdateRequest request) {
         CustomerOrder order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order not found"));
         currentUser.ensureSectionAccess(order.getStore(), DashboardSection.ORDERS, PermissionLevel.EDIT);
+        // POS-26: an open restaurant order is run from the tills (items, payments, close); changing its
+        // status or payment here would free a table with an unpaid bill.
+        if (order.getPosOrderType() != null && order.getStatus() == OrderStatus.CONFIRMED) {
+            throw new com.byonix.shoplink.common.ConflictException("This restaurant order is still open at the tills. Settle it on the POS.");
+        }
         PaymentStatus previous = order.getPaymentStatus();
         if (request.status() != previous) {
             validatePaymentTransition(previous, request.status());

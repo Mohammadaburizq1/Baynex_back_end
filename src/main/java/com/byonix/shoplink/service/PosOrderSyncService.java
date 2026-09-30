@@ -98,6 +98,7 @@ public class PosOrderSyncService {
     private final com.byonix.shoplink.repository.UserRepository userRepository;
     private final PosStaffService staffService;
     private final org.springframework.jdbc.core.JdbcTemplate jdbc;
+    private final com.byonix.shoplink.repository.PosShiftRepository shiftRepository;
 
     public PosDtos.SyncOrderResponse sync(PosDevicePrincipal principal, PosDtos.SyncOrderRequest request) {
         try {
@@ -115,15 +116,19 @@ public class PosOrderSyncService {
 
     // ── apply ─────────────────────────────────────────────────────────────────────────────────
 
-    private record Line(PosPriceBookService.BookProduct product, PosPriceBookService.BookVariant variant,
-                        List<SelectedAddOn> addOns, BigDecimal basePrice, BigDecimal unitPrice, int quantity,
-                        BigDecimal lineTotal) {
+    /** A sold line validated against the device's price book (shared with POS-26 restaurant orders). */
+    record Line(PosPriceBookService.BookProduct product, PosPriceBookService.BookVariant variant,
+                List<SelectedAddOn> addOns, BigDecimal basePrice, BigDecimal unitPrice, int quantity,
+                BigDecimal lineTotal) {
         String itemName() {
             return InventoryLedger.itemName(product.name(), variant == null ? null : variant.label());
         }
     }
 
-    private record SelectedAddOn(String groupName, String optionName, BigDecimal priceDelta) {}
+    record SelectedAddOn(String groupName, String optionName, BigDecimal priceDelta) {}
+
+    /** The catalog rows a validated line resolved to now (null when deleted since the device's sync). */
+    record Resolved(Product product, ProductVariant variant) {}
 
     private PosDtos.SyncOrderResponse apply(PosDevicePrincipal principal, PosDtos.SyncOrderRequest r) {
         PosDevice uploader = uploader(principal);
@@ -146,6 +151,7 @@ public class PosOrderSyncService {
                 .orElseThrow(() -> new PosSyncRejectedException("CATALOG_VERSION_UNKNOWN",
                         "This sale refers to a catalog version this device was never given"));
         List<Line> lines = validate(r, book);
+        PosShiftService.checkShiftLink(shiftRepository, r.shiftId(), store.getId(), origin.getId());
         Instant soldAt = saleTime(r.soldAt(), origin, Instant.now());
         BigDecimal discount = validateDiscount(r, book, soldAt, lines);
 
@@ -175,87 +181,10 @@ public class PosOrderSyncService {
         int lineNo = 0;
         for (Line line : lines) {
             lineNo++;
-            Product product = productRepository.findByIdForUpdate(line.product().id())
-                    .filter(p -> p.getStore().getId().equals(store.getId()))
-                    .orElse(null);
-            ProductVariant variant = null;
-            StockTarget target = null;
-            if (product == null) {
-                conflicts.add(conflict(PosSyncConflictType.PRODUCT_DELETED, line,
-                        "Deleted after this device's last sync. The sale is kept as sold; no stock could be moved."));
-            } else {
-                if (!product.isAvailable()) {
-                    conflicts.add(conflict(PosSyncConflictType.PRODUCT_UNAVAILABLE, line,
-                            "Switched off after this device's last sync. The sale is kept and its stock was moved."));
-                }
-                BigDecimal currentPrice;
-                if (line.variant() != null) {
-                    if (!product.isHasVariants()) {
-                        conflicts.add(conflict(PosSyncConflictType.PRODUCT_CHANGED, line,
-                                "The product no longer has options. The sale is kept; no stock was moved — check the count."));
-                        currentPrice = null;
-                    } else {
-                        variant = variantRepository.findByIdForUpdate(line.variant().id())
-                                .filter(v -> v.getProduct().getId().equals(product.getId()) && v.getStore().getId().equals(store.getId()))
-                                .orElse(null);
-                        if (variant == null) {
-                            conflicts.add(conflict(PosSyncConflictType.VARIANT_DELETED, line,
-                                    "This option was deleted after this device's last sync. The sale is kept; no stock could be moved."));
-                            currentPrice = null;
-                        } else {
-                            if (!variant.isAvailable()) {
-                                conflicts.add(conflict(PosSyncConflictType.VARIANT_UNAVAILABLE, line,
-                                        "This option was switched off after this device's last sync. The sale is kept and its stock was moved."));
-                            }
-                            currentPrice = variant.effectivePrice();
-                            target = new StockTarget(product, variant, variant.getStock());
-                        }
-                    }
-                } else if (product.isHasVariants()) {
-                    conflicts.add(conflict(PosSyncConflictType.PRODUCT_CHANGED, line,
-                            "The product now has options, so its stock is kept per option. The sale is kept; no stock was moved — check the count."));
-                    currentPrice = null;
-                } else {
-                    currentPrice = product.getSalePrice() != null ? product.getSalePrice() : product.getPrice();
-                    target = new StockTarget(product, null, product.getStock());
-                }
-                if (currentPrice != null && currentPrice.compareTo(line.basePrice()) != 0) {
-                    PosSyncConflict c = conflict(PosSyncConflictType.PRICE_CHANGED, line,
-                            "The price changed after this device's last sync. The sale keeps the price that was charged.");
-                    c.setSaleUnitPrice(line.basePrice());
-                    c.setCurrentUnitPrice(currentPrice);
-                    conflicts.add(c);
-                }
-            }
-            if (target != null && target.stockBefore() != null) {
-                moveStock(store, target, line, orderCode, ledgerNote, conflicts);
-            }
-            if (product != null) {
-                touched.putIfAbsent(product.getId() + ":" + (variant == null ? "" : variant.getId()),
-                        new PosDtos.StockLevel(product.getId(), variant == null ? null : variant.getId(), null));
-            }
-
-            OrderItem item = new OrderItem();
-            item.setOrder(order);
-            item.setProduct(product);
-            item.setVariant(variant);
-            // History is the snapshot the cashier sold from, whatever the catalog says today.
-            item.setProductNameSnapshot(line.product().name());
-            item.setVariantLabel(line.variant() == null ? null : line.variant().label());
-            item.setSkuSnapshot(line.variant() != null && line.variant().sku() != null ? line.variant().sku() : line.product().sku());
-            item.setUnitPrice(line.unitPrice());
-            item.setQuantity(line.quantity());
-            item.setTotal(line.lineTotal());
+            Resolved resolved = commitLine(store, line, orderCode, ledgerNote, conflicts, touched);
+            OrderItem item = newItem(order, line, resolved);
             // POS-23: returns name the line they reverse by the till's line number (items keep payload order).
             item.setPosLineNo(lineNo);
-            for (SelectedAddOn addOn : line.addOns()) {
-                OrderItemModifier m = new OrderItemModifier();
-                m.setOrderItem(item);
-                m.setGroupName(addOn.groupName());
-                m.setOptionName(addOn.optionName());
-                m.setPriceDelta(addOn.priceDelta());
-                item.getModifiers().add(m);
-            }
             order.getItems().add(item);
             subtotal = subtotal.add(line.lineTotal());
         }
@@ -295,6 +224,7 @@ public class PosOrderSyncService {
         order.setPosDevice(origin);
         order.setPosLocalOrderId(r.localOrderId());
         order.setPosReceiptNumber(r.receiptNumber());
+        order.setPosShiftId(r.shiftId());
         // Reports count the sale on the day it happened, not the day it was uploaded. The device
         // clock is only trusted within bounds.
         order.setCreatedAt(soldAt);
@@ -320,6 +250,110 @@ public class PosOrderSyncService {
         op = operationRepository.saveAndFlush(op);
 
         return response(op, false, saved.getTotal(), saved.getCurrency(), touched.values(), conflicts);
+    }
+
+    /**
+     * Resolves a validated line to today's catalog rows, records what changed since the device's sync
+     * (never applied to the line), and moves its stock through the guarded decrement + ledger. Shared
+     * by completed POS sales and POS-26 restaurant lines (which commit stock when they are sent).
+     */
+    Resolved commitLine(Store store, Line line, String orderCode, String ledgerNote, List<PosSyncConflict> conflicts,
+                        Map<String, PosDtos.StockLevel> touched) {
+        Product product = productRepository.findByIdForUpdate(line.product().id())
+                .filter(p -> p.getStore().getId().equals(store.getId()))
+                .orElse(null);
+        ProductVariant variant = null;
+        StockTarget target = null;
+        if (product == null) {
+            conflicts.add(conflict(PosSyncConflictType.PRODUCT_DELETED, line,
+                    "Deleted after this device's last sync. The sale is kept as sold; no stock could be moved."));
+        } else {
+            if (!product.isAvailable()) {
+                conflicts.add(conflict(PosSyncConflictType.PRODUCT_UNAVAILABLE, line,
+                        "Switched off after this device's last sync. The sale is kept and its stock was moved."));
+            }
+            BigDecimal currentPrice;
+            if (line.variant() != null) {
+                if (!product.isHasVariants()) {
+                    conflicts.add(conflict(PosSyncConflictType.PRODUCT_CHANGED, line,
+                            "The product no longer has options. The sale is kept; no stock was moved — check the count."));
+                    currentPrice = null;
+                } else {
+                    variant = variantRepository.findByIdForUpdate(line.variant().id())
+                            .filter(v -> v.getProduct().getId().equals(product.getId()) && v.getStore().getId().equals(store.getId()))
+                            .orElse(null);
+                    if (variant == null) {
+                        conflicts.add(conflict(PosSyncConflictType.VARIANT_DELETED, line,
+                                "This option was deleted after this device's last sync. The sale is kept; no stock could be moved."));
+                        currentPrice = null;
+                    } else {
+                        if (!variant.isAvailable()) {
+                            conflicts.add(conflict(PosSyncConflictType.VARIANT_UNAVAILABLE, line,
+                                    "This option was switched off after this device's last sync. The sale is kept and its stock was moved."));
+                        }
+                        currentPrice = variant.effectivePrice();
+                        target = new StockTarget(product, variant, variant.getStock());
+                    }
+                }
+            } else if (product.isHasVariants()) {
+                conflicts.add(conflict(PosSyncConflictType.PRODUCT_CHANGED, line,
+                        "The product now has options, so its stock is kept per option. The sale is kept; no stock was moved — check the count."));
+                currentPrice = null;
+            } else {
+                currentPrice = product.getSalePrice() != null ? product.getSalePrice() : product.getPrice();
+                target = new StockTarget(product, null, product.getStock());
+            }
+            if (currentPrice != null && currentPrice.compareTo(line.basePrice()) != 0) {
+                PosSyncConflict c = conflict(PosSyncConflictType.PRICE_CHANGED, line,
+                        "The price changed after this device's last sync. The sale keeps the price that was charged.");
+                c.setSaleUnitPrice(line.basePrice());
+                c.setCurrentUnitPrice(currentPrice);
+                conflicts.add(c);
+            }
+        }
+        if (target != null && target.stockBefore() != null) {
+            moveStock(store, target, line, orderCode, ledgerNote, conflicts);
+        }
+        if (product != null) {
+            touched.putIfAbsent(product.getId() + ":" + (variant == null ? "" : variant.getId()),
+                    new PosDtos.StockLevel(product.getId(), variant == null ? null : variant.getId(), null));
+        }
+        return new Resolved(product, variant);
+    }
+
+    /** An order item frozen from what the cashier rang up (names, prices, add-ons as sold). */
+    static OrderItem newItem(CustomerOrder order, Line line, Resolved resolved) {
+        OrderItem item = new OrderItem();
+        item.setOrder(order);
+        item.setProduct(resolved.product());
+        item.setVariant(resolved.variant());
+        // History is the snapshot the cashier sold from, whatever the catalog says today.
+        item.setProductNameSnapshot(line.product().name());
+        item.setVariantLabel(line.variant() == null ? null : line.variant().label());
+        item.setSkuSnapshot(line.variant() != null && line.variant().sku() != null ? line.variant().sku() : line.product().sku());
+        item.setUnitPrice(line.unitPrice());
+        item.setQuantity(line.quantity());
+        item.setTotal(line.lineTotal());
+        for (SelectedAddOn addOn : line.addOns()) {
+            OrderItemModifier m = new OrderItemModifier();
+            m.setOrderItem(item);
+            m.setGroupName(addOn.groupName());
+            m.setOptionName(addOn.optionName());
+            m.setPriceDelta(addOn.priceDelta());
+            item.getModifiers().add(m);
+        }
+        return item;
+    }
+
+    /** Current central counts of the given items (what a device should now show). */
+    List<PosDtos.StockLevel> stockLevels(Iterable<PosDtos.StockLevel> items) {
+        List<PosDtos.StockLevel> inventory = new ArrayList<>();
+        for (PosDtos.StockLevel item : items) {
+            Integer stock = item.variantId() != null ? variantRepository.findStockById(item.variantId())
+                    : productRepository.findStockById(item.productId());
+            inventory.add(new PosDtos.StockLevel(item.productId(), item.variantId(), stock));
+        }
+        return inventory;
     }
 
     private record StockTarget(Product product, ProductVariant variant, Integer stockBefore) {}
@@ -369,7 +403,7 @@ public class PosOrderSyncService {
      * guest customer of this store, grouped by phone/email like any guest order). Store B's customers
      * cannot be attached to Store A's sale: an account that never ordered here is not linked.
      */
-    private void applyCustomer(CustomerOrder order, PosDtos.SaleCustomer c, Store store, List<PosSyncConflict> conflicts) {
+    void applyCustomer(CustomerOrder order, PosDtos.SaleCustomer c, Store store, List<PosSyncConflict> conflicts) {
         if (c == null) {
             order.setCustomerName(WALK_IN_CUSTOMER);
             order.setCustomerPhone("");
@@ -491,6 +525,23 @@ public class PosOrderSyncService {
         List<Line> lines = new ArrayList<>();
         BigDecimal subtotal = BigDecimal.ZERO;
         for (PosDtos.SyncOrderItem item : r.items()) {
+            Line line = validateItem(book, item);
+            lines.add(line);
+            subtotal = subtotal.add(line.lineTotal());
+        }
+        if (subtotal.compareTo(r.subtotal()) != 0 || subtotal.subtract(r.discount()).compareTo(r.total()) != 0) {
+            throw new PosSyncRejectedException("TOTAL_MISMATCH", "The sale's totals do not add up");
+        }
+        return lines;
+    }
+
+    /**
+     * One rung-up item checked against the price book the device was given: product, variant and
+     * add-ons must be in it, the add-on group rules must hold, and the unit price and line total must
+     * match exactly. Shared by completed POS sales and POS-26 restaurant lines.
+     */
+    static Line validateItem(PosPriceBookService.PriceBook book, PosDtos.SyncOrderItem item) {
+        {
             PosPriceBookService.BookProduct product = book.product(item.productId())
                     .orElseThrow(() -> new PosSyncRejectedException("UNKNOWN_ITEM",
                             "An item in this sale was not in the catalog this device was given"));
@@ -522,13 +573,8 @@ public class PosOrderSyncService {
                 throw new PosSyncRejectedException("PRICE_MISMATCH", "The price of \"" + product.name()
                         + "\" does not match the catalog this sale was made from");
             }
-            lines.add(new Line(product, variant, addOns, base, unit, item.quantity(), lineTotal));
-            subtotal = subtotal.add(lineTotal);
+            return new Line(product, variant, addOns, base, unit, item.quantity(), lineTotal);
         }
-        if (subtotal.compareTo(r.subtotal()) != 0 || subtotal.subtract(r.discount()).compareTo(r.total()) != 0) {
-            throw new PosSyncRejectedException("TOTAL_MISMATCH", "The sale's totals do not add up");
-        }
-        return lines;
     }
 
     /**
@@ -688,6 +734,7 @@ public class PosOrderSyncService {
             }
         }
         if (r.exchange() != null) b.append("|exchange:").append(r.exchange().localReturnId()).append(',').append(plain(r.exchange().credit()));
+        if (r.shiftId() != null) b.append("|shift:").append(r.shiftId());
         for (PosDtos.SyncOrderItem i : r.items()) {
             b.append("|item:").append(i.productId()).append(',').append(i.variantId()).append(',')
                     .append(i.modifierOptionIds() == null ? "" : i.modifierOptionIds().stream().map(UUID::toString).sorted().toList())

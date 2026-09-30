@@ -14,6 +14,14 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ProductVariantRepository extends JpaRepository<ProductVariant, UUID> {
+    /** Bulk import: every variant barcode in the store (barcodes are one namespace across products and variants). */
+    @Query("select v.barcode from ProductVariant v where v.store.id = :storeId and v.barcode is not null")
+    List<String> findBarcodesByStore(@Param("storeId") UUID storeId);
+
+    /** Bulk import: every variant SKU in the store, lower-cased (SKUs are one case-insensitive namespace). */
+    @Query("select lower(v.sku) from ProductVariant v where v.store.id = :storeId and v.sku is not null")
+    List<String> findLowerSkusByStore(@Param("storeId") UUID storeId);
+
     /** Variants with their option values (and each value's option), for many products in one query. */
     @Query("""
             select distinct v from ProductVariant v

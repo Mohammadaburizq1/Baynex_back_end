@@ -22,6 +22,10 @@ public class PosController {
     private final com.byonix.shoplink.service.PosCustomerService customerService;
     private final com.byonix.shoplink.service.PosStaffService staffService;
     private final com.byonix.shoplink.service.PosReturnSyncService returnSyncService;
+    private final com.byonix.shoplink.service.PosShiftService shiftService;
+    private final com.byonix.shoplink.service.PosRestaurantService restaurantService;
+    private final com.byonix.shoplink.service.RestaurantSetupService restaurantSetupService;
+    private final com.byonix.shoplink.service.KitchenService kitchenService;
 
     @PostMapping("/activate")
     public ApiResponse<PosDtos.ActivationResponse> activate(@Valid @RequestBody PosDtos.ActivateRequest request,
@@ -74,5 +78,71 @@ public class PosController {
     public ApiResponse<PosDtos.SyncReturnResponse> syncReturn(@AuthenticationPrincipal PosDevicePrincipal device,
                                                               @Valid @RequestBody PosDtos.SyncReturnRequest request) {
         return ApiResponse.ok(returnSyncService.sync(device, request));
+    }
+
+    /** POS-26: restaurant mode, floor areas, tables and delivery zones of the device's store. */
+    @GetMapping("/restaurant/setup")
+    public ApiResponse<com.byonix.shoplink.api.dto.RestaurantDtos.PosSetup> restaurantSetup(@AuthenticationPrincipal PosDevicePrincipal device) {
+        return ApiResponse.ok(restaurantSetupService.posSetup(device));
+    }
+
+    /**
+     * POS-26: one change to a restaurant order (open, add items, void, move, merge, pay, close…), made at
+     * a till possibly offline. Idempotent on operationId; answers with the order as the server has it now.
+     */
+    @PostMapping("/restaurant/operations")
+    public ApiResponse<com.byonix.shoplink.api.dto.RestaurantDtos.OpResponse> restaurantOperation(
+            @AuthenticationPrincipal PosDevicePrincipal device, @Valid @RequestBody com.byonix.shoplink.api.dto.RestaurantDtos.OpRequest request) {
+        return ApiResponse.ok(restaurantService.apply(device, request));
+    }
+
+    /** POS-26: the store's open restaurant orders and those changed since [since] (what other tills did). */
+    @GetMapping("/restaurant/orders")
+    public ApiResponse<com.byonix.shoplink.api.dto.RestaurantDtos.StateResponse> restaurantOrders(
+            @AuthenticationPrincipal PosDevicePrincipal device, @RequestParam(required = false) java.time.Instant since) {
+        return ApiResponse.ok(restaurantService.state(device, since));
+    }
+
+    /** POS-27: open kitchen tickets of the store and every ticket changed since [since]. */
+    @GetMapping("/kitchen/tickets")
+    public ApiResponse<com.byonix.shoplink.api.dto.KitchenDtos.TicketsResponse> kitchenTickets(
+            @AuthenticationPrincipal PosDevicePrincipal device, @RequestParam(required = false) java.time.Instant since) {
+        return ApiResponse.ok(kitchenService.tickets(device, since));
+    }
+
+    /** POS-27: a status change or recall made on a kitchen screen (possibly offline). Idempotent on operationId. */
+    @PostMapping("/kitchen/operations")
+    public ApiResponse<com.byonix.shoplink.api.dto.KitchenDtos.KitchenOpResponse> kitchenOperation(
+            @AuthenticationPrincipal PosDevicePrincipal device, @Valid @RequestBody com.byonix.shoplink.api.dto.KitchenDtos.KitchenOp request) {
+        return ApiResponse.ok(kitchenService.apply(device, request));
+    }
+
+    /**
+     * POS-24: a shift opened at the till (possibly offline). Idempotent on operationId; the store is the
+     * authenticated device's, the shift belongs to the device that opened it.
+     */
+    @PostMapping("/shifts/open")
+    public ApiResponse<PosDtos.ShiftSyncResponse> openShift(@AuthenticationPrincipal PosDevicePrincipal device,
+                                                            @Valid @RequestBody PosDtos.OpenShiftRequest request) {
+        return ApiResponse.ok(shiftService.open(device, request));
+    }
+
+    /** POS-24: cash put into or taken out of the shift's drawer. Idempotent on operationId. */
+    @PostMapping("/shifts/{shiftId}/cash-movements")
+    public ApiResponse<PosDtos.ShiftSyncResponse> cashMovement(@AuthenticationPrincipal PosDevicePrincipal device,
+                                                               @PathVariable java.util.UUID shiftId,
+                                                               @Valid @RequestBody PosDtos.CashMovementRequest request) {
+        return ApiResponse.ok(shiftService.cashMovement(device, shiftId, request));
+    }
+
+    /**
+     * POS-24: the counted close of a shift. The server recomputes the expected cash from its own records
+     * and keeps the till's figure beside it. Idempotent on operationId; a shift closes once.
+     */
+    @PostMapping("/shifts/{shiftId}/close")
+    public ApiResponse<PosDtos.ShiftSyncResponse> closeShift(@AuthenticationPrincipal PosDevicePrincipal device,
+                                                             @PathVariable java.util.UUID shiftId,
+                                                             @Valid @RequestBody PosDtos.CloseShiftRequest request) {
+        return ApiResponse.ok(shiftService.close(device, shiftId, request));
     }
 }

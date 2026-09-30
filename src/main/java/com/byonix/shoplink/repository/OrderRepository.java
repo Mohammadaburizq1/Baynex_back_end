@@ -17,6 +17,28 @@ public interface OrderRepository extends JpaRepository<CustomerOrder, UUID> {
 
     /** POS-23: the sale a till made under this local id (e.g. the replacement sale of an exchange). */
     Optional<CustomerOrder> findByPosDevice_IdAndPosLocalOrderId(UUID deviceId, UUID posLocalOrderId);
+
+    // ── POS-26 restaurant orders (identified on every till by the id the opening till generated) ──
+
+    @Query("select o.id from CustomerOrder o where o.store.id = :storeId and o.posLocalOrderId = :uid and o.posOrderType is not null")
+    List<UUID> findRestaurantOrderIds(@Param("storeId") UUID storeId, @Param("uid") UUID uid);
+
+    /** Serializes concurrent changes to one restaurant order from several tills. */
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("select o from CustomerOrder o where o.id = :id")
+    Optional<CustomerOrder> findByIdForUpdate(@Param("id") UUID id);
+
+    @Query("select o from CustomerOrder o where o.store.id = :storeId and o.posOrderType is not null "
+            + "and (o.status = com.byonix.shoplink.domain.enums.OrderStatus.CONFIRMED or o.updatedAt > :since) order by o.createdAt")
+    List<CustomerOrder> findRestaurantOrdersOpenOrChangedSince(@Param("storeId") UUID storeId, @Param("since") Instant since);
+
+    @Query("select o from CustomerOrder o where o.store.id = :storeId and o.posOrderType is not null "
+            + "and o.status = com.byonix.shoplink.domain.enums.OrderStatus.CONFIRMED and o.restaurantTableId = :tableId")
+    List<CustomerOrder> findOpenOrdersOnTable(@Param("storeId") UUID storeId, @Param("tableId") UUID tableId);
+
+    List<CustomerOrder> findTop100ByStore_IdAndRestaurantTableIdOrderByCreatedAtDesc(UUID storeId, UUID tableId);
+
+    boolean existsByRestaurantTableId(UUID tableId);
     List<CustomerOrder> findByCustomer_Id(UUID customerId, org.springframework.data.domain.Pageable pageable);
     Optional<CustomerOrder> findByIdAndCustomer_Id(UUID id, UUID customerId);
     Optional<CustomerOrder> findByStore_SlugAndOrderCodeIgnoreCaseAndCustomerEmailIgnoreCase(
